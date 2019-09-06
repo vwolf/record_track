@@ -1,0 +1,15 @@
+{
+  "@@last_modified": "2019-09-05T13:18:27.768589",
+  "title": "Rekord Track",
+  "@title": {
+    "description": "App title",
+    "type": "text",
+    "placeholders": {}
+  },
+  "hello": "Hallo",
+  "@hello": {
+    "description": "Greeting",
+    "type": "text",
+    "placeholders": {}
+  }
+}
