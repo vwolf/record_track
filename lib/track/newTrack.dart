@@ -46,7 +46,7 @@ class _NewTrackState extends State<NewTrack> {
   TextStyle _formTextStyle = TextStyle(color: Colors.white);
  
   InputDecoration _formInputDecoration = InputDecoration(
-      labelText: 'Enter name', labelStyle: TextStyle(color: Colors.white70));
+      labelText: 'Name', labelStyle: TextStyle(color: Colors.white70));
 
 
   @override 
@@ -172,7 +172,7 @@ class _NewTrackState extends State<NewTrack> {
               controller: _formDescriptionController,
               keyboardType: TextInputType.text,
               decoration: InputDecoration(
-                labelText: "Enter Description",
+                labelText: "Description",
                 labelStyle: TextStyle(color: Colors.white70),
               ),
               validator: (value) {
@@ -211,7 +211,7 @@ class _NewTrackState extends State<NewTrack> {
                 style: _formTextStyle,
                 textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
-                  labelText: 'Enter Location name',
+                  labelText: 'Location name',
                   labelStyle: TextStyle(color: Colors.white70),
                 ),
                 validator: (value) {
