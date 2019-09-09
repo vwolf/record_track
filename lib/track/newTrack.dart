@@ -1,12 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+
 import 'package:latlong/latlong.dart';
 import 'package:flutter/rendering.dart';
+import 'package:record_track/gpx/gpxFileData.dart';
+import 'package:record_track/gpx/gpxParser.dart';
 
 import '../services/geolocationService.dart';
 import '../db/models/track.dart';
 import '../db/database.dart';
+
+import 'package:path/path.dart' as path;
+import '../readWrite/readFile.dart';
 
 /// Create new track or update track
 /// Initilizer for new track and update track
@@ -121,7 +127,55 @@ class _NewTrackState extends State<NewTrack> {
   }
 
   Future getTrack() async {
+    final filePath = await ReadFile().getPath();
+    String fileType = path.extension(filePath);
+    if (filePath != '.gpx') {
+      debugPrint("Wrong file type");
+      bottomSheet(fileType);
+      return null;
+    }
 
+    // fileType ok
+    _gpxFilePath = filePath;
+    final fileContent = await ReadFile().readFile(filePath);
+    GpxFileData trackGpxData = await GpxParser(fileContent).parseData();
+
+    // fill form
+    _formNameController.text = trackGpxData.trackName;
+    _formDescriptionController.text = trackGpxData.trackSeqName;
+    _formLocationController.text = trackGpxData.trackSeqName;
+
+    // translate first point to an address
+    GpxCoord firstPoint = trackGpxData.gpxCoords.first;
+
+    List<Placemark> placemark = await Geolocator().placemarkFromCoordinates(firstPoint.lat, firstPoint.lon, localeIdentifier: "de_DE");
+    if (placemark.isNotEmpty && placemark != null) {
+      String loc = placemark[0].country + ", " + placemark[0].locality;
+      _formLocationController.text = loc;
+    }
+
+    // use first point as startCoords
+    _formStartLatitudeController.text = firstPoint.lat.toString();
+    _formStartLongitudeController.text = firstPoint.lon.toString();
+
+  }
+
+
+  bottomSheet(String fileType) {
+    showBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.error, color: Colors.redAccent),
+              title: Text("Can\'t read file of type $fileType. Choose a *.gpx file"),
+            )
+          ],
+        );
+      }
+    );
   }
 
   Future getImage() async {}

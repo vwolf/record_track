@@ -59,8 +59,35 @@ class DBProvider {
     return _trackTable.newTrack(db, newTrack);
   }
 
-  Future<List<Track>> getAllTracks() async {
+  updateTrack(Track tour) async {
+    final db = await database;
+    return _trackTable.updateTrack(db, tour);
+  }
+
+  deleteTrack(int id) async {
+    final db = await database;
+    return _trackTable.deleteTrack(db, id);
+  }
+
+ Future<List<Track>> getAllTracks() async {
     final db = await database;
     return _trackTable.getAllTracks(db);
   }
+
+  Future<int> tableExists(String tableName) async {
+    final db = await database;
+    return _trackTable.tableExists(db, tableName);
+  }
+
+  Future<int> tourExists(String tourname) async {
+    final db = await database;
+    return _trackTable.trackExists(db, tourname);
+  }
+
+  cloneTrack(Track newTrack, String oldTrackName) async {
+    final db = await database;
+    return _trackTable.cloneTrack(db, newTrack, oldTrackName);
+  }
+
+ 
 }

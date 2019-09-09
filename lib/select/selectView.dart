@@ -1,9 +1,15 @@
 import "package:flutter/material.dart";
 
 import '../track/newTrack.dart';
+import '../track/trackList.dart';
 
+/// Kind of main navigation page
+/// New Track
+/// Show All Tracks
+/// Start Recording Track
+/// 
 class SelectPage extends StatelessWidget {
-
+  
   void _newTrack(BuildContext context) {
     debugPrint("newTrack");
     Navigator.of(context).push(
@@ -17,8 +23,13 @@ class SelectPage extends StatelessWidget {
     debugPrint("startTrack");
   }
 
-  void _allTracks() {
+  void _allTracks(BuildContext context) {
     debugPrint("allTracks");
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) {
+        return TrackList();
+      })
+    );
   }
 
 
@@ -68,7 +79,7 @@ class SelectPage extends StatelessWidget {
               icon: Icon(Icons.format_list_bulleted, size: 52.0),
               tooltip: "All Tracks",
               onPressed: () {
-                _allTracks();
+                _allTracks(context);
               },
             ),
             Padding(

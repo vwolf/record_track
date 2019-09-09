@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'models/track.dart';
+import 'trackCoord.dart';
+import 'trackItem.dart';
 
 class TrackTable {
   TrackTable();
@@ -34,9 +36,100 @@ class TrackTable {
     }
   }
 
+  /// Write new track to db
+  /// Track names have to be unique
   Future newTrack(Database db, Track newTrack) async {
+    debugPrint("DB newTrack ${newTrack.name}");
+    // get max id in table
+    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM TRACK");
+    int id = table.first['id'];
+    // join all parts of trackname with '_'
+    var trackNameFinal = newTrack.name.replaceAll(new RegExp(r' '), '_');
+    // create trackCoordsTable for track
+    var trackCoordsTableName = await createTrackCoordsTable(db, trackNameFinal);
+    print("CreateTrackCoordsTable $trackCoordsTableName");
+    newTrack.track = trackCoordsTableName;
 
+    // create track items table
+    var trackItemsTable = await createTrackItemTable(db, trackNameFinal);
+    debugPrint("CreateTrackItemTable $trackItemsTable");
+    newTrack.items = trackItemsTable;
+
+    // insert in table using new id
+    debugPrint("Start insert new Track");
+    newTrack.id = id;
+    newTrack.createdAt = DateTime.now().toIso8601String();
+    var result = await db.insert("Track", newTrack.toMap());
+    return result;
   }
+
+
+  /// To change the track name, we need to create
+  /// new track, coords and item table
+  /// Clone tables then delete
+  /// ToDo Check if tables exists
+  Future cloneTrack(Database db, Track newTrack, String oldTrackName) async {
+    print("db CloneTrack");
+    /// first create new table and save
+    // int id = newTrack.id;
+    // join all parts of tourname with '_'
+    var modTourName = newTrack.name.replaceAll(RegExp(r' '), '_');
+    String oldTrackNameMod = oldTrackName.replaceAll(RegExp(r' '), '_');
+    // create track table for track
+    var cloneTableResult = await cloneTrackCoordsTable(db, oldTrackNameMod, modTourName);
+    newTrack.track = cloneTableResult;
+    TrackCoordTable().deleteTrackCoordTable(db, oldTrackNameMod);
+
+    // clone item table and delete old table
+    var cloneItemTableResult = await cloneTrackItemTable(db, oldTrackNameMod, modTourName);
+    newTrack.items = cloneItemTableResult;
+    TrackItemTable().deleteTrackItemTable(db, oldTrackNameMod);
+
+    // delete track and add new track
+    deleteTrack(db, newTrack.id);
+    var res = await db.insert("TRACK", newTrack.toMap());
+    return res;
+  }
+
+  /// Table for track coords
+  createTrackCoordsTable(Database db, String trackName) async {
+    return await TrackCoordTable().createTrackCoordTable(db, trackName);
+  }
+
+/// Clone table for track coordinates
+  cloneTrackCoordsTable(Database db, String tableToClone, String newTableName ) async {
+    return await TrackCoordTable().cloneTrackCoordTable(db, tableToClone, newTableName);
+  }
+
+  /// Table for track items
+  createTrackItemTable(Database db, String tourName) async {
+    return await TrackItemTable().createTrackItemTable(db, tourName);
+  }
+
+  /// Clone table for track items
+  cloneTrackItemTable(Database db, String tableToClone, String tableName ) async {
+    return await TrackItemTable().cloneTrackItemTable(db, tableToClone, tableName);
+  }
+
+  updateTrack(Database db, Track track) async {
+    print("updateTrack");
+    try {
+      var result = await db
+          .update("TRACK", track.toMap(), where: "id = ?", whereArgs: [track.id]);
+      return result;
+    } on DatabaseException catch (e) {
+      print("sqlite error $e");
+    }
+    return 0;
+  }
+
+
+  deleteTrack(Database db, int id) async {
+    print("deleteTrack with id $id");
+    return db.delete("TRACK", where: "id = ?", whereArgs: [id]);
+  }
+
+
 
   Future<List<Track>> getAllTracks(Database db) async {
     debugPrint("getAllTracks()");
@@ -51,4 +144,36 @@ class TrackTable {
 
     return [];
   }
+
+
+  Future<int> tableExists(Database db, String tableName) async {
+    var result = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name= ?",
+        [tableName]);
+    if (result.length > 0) {
+      print("table $tableName exists");
+      return result.length;
+    } else {
+      print("table $tableName does not exists");
+      var tableCreated = await createTrackTable(db);
+      if (tableCreated == true) {
+        return 1;
+      }
+    }
+    return null;
+  }
+
+Future<int> trackExists(Database db, String query) async {
+    try {
+      List<Map> maps =
+          await db.rawQuery("SELECT id FROM TOUR WHERE name = ? ", [query]);
+      if (maps.length > 0) {
+        return maps.length;
+      }
+    } on DatabaseException catch (e) {
+      print("DatabaseException: $e");
+    }
+    return null;
+  }
+
 }
