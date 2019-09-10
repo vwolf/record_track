@@ -82,10 +82,13 @@ class Track {
 
 
   addOption( String optionName, optionValue) {
-    var newOption = jsonEncode({optionName : optionValue});
+    
     if (options != null) {
       var currentOptions = jsonDecode(options);
-      
+      currentOptions[optionName] =  optionValue;
+      options = jsonEncode(currentOptions);
+    } else {
+      options = jsonEncode({optionName : optionValue});
     }
   }
 }
