@@ -91,15 +91,21 @@ class ScaleLayer extends StatelessWidget {
       : '${distance.toStringAsFixed(0)} m';
     double width = (end.x - start.x);
 
-    return CustomPaint(
-      painter: ScalePainter(
-        width,
-        displayDistance,
-        lineColor: scaleLayerOpts.lineColor,
-        lineWidth: scaleLayerOpts.lineWidth,
-        padding: scaleLayerOpts.padding,
-        textStyle: scaleLayerOpts.textStyle,
-      ),
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: Padding(
+        padding: EdgeInsets.only(left: 8.0, bottom: 40.0),
+          child: CustomPaint(
+            painter: ScalePainter(
+              width,
+              displayDistance,
+              lineColor: scaleLayerOpts.lineColor,
+              lineWidth: scaleLayerOpts.lineWidth,
+              padding: scaleLayerOpts.padding,
+              textStyle: scaleLayerOpts.textStyle,
+            ),
+          ),     
+        ),
     );
   }
 }
@@ -129,7 +135,7 @@ class ScalePainter extends CustomPainter {
     ..strokeCap = StrokeCap.square
     ..strokeWidth = lineWidth;
 
-    var sizeForStartEnd = 4;
+    var sizeForStartEnd = 6;
     var paddingLeft = padding == null ? 0 : padding.left + sizeForStartEnd / 2;
     var paddingTop = padding == null ? 0 : padding.top;
 
