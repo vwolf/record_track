@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong/latlong.dart';
 
@@ -121,5 +123,22 @@ class GeoLocationService {
   Future<double> getDistanceBetweenCoords(LatLng coord1, LatLng coord2) async {
     double distanceInMeters = await Geolocator().distanceBetween(coord1.latitude, coord1.longitude, coord2.latitude, coord2.longitude);
     return distanceInMeters;
+  }
+
+  /// Get [Placemark]s for an [locationName]
+  /// 
+  Future <List<Placemark>> getPlacemarksFromLocationName(String locationName) async {
+    try {
+      List<Placemark> placemark = await Geolocator().placemarkFromAddress(locationName);
+      if (placemark.length > 0) {
+        print(placemark[0].country);
+        print(placemark[0].position.latitude);
+        print(placemark[0].position.longitude);
+        return placemark;
+      }
+    } on PlatformException catch (e) {
+      debugPrint ("PlatformException: $e");
+    } 
+    return null;
   }
 }

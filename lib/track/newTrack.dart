@@ -13,10 +13,22 @@ import '../db/database.dart';
 
 import 'package:path/path.dart' as path;
 import '../readWrite/readFile.dart';
+import '../services/status.dart';
+import 'startTrackMap.dart';
 
 /// Create new track or update track
 /// Initilizer for new track and update track
-/// 
+/// New Track start position: 
+/// 1. Enter name for start location, no coords. 
+///    Get [Placemark] list for location [GeoLocationService] [getPlacemarksFromLocationName]
+/// 2. Enter lat / lon values and get [Placemark] for position.
+///    [getStartPosition] -> [GeoLocationService] []
+/// 3. Click Add sign to get current position.
+///    Get [Placemark] for current position
+/// All this will only work if connected to internet
+/// 4. No connection 
+///    Enter location name -> no coords -> use default coords
+///    Enter location name -> use offline map tiles to set start position
 class NewTrack extends StatefulWidget {
 
   Track track = Track();
@@ -47,6 +59,11 @@ class _NewTrackState extends State<NewTrack> {
   final _formLocationController = TextEditingController();
   final _formStartLatitudeController = TextEditingController();
   final _formStartLongitudeController = TextEditingController();
+
+  // Form focus nodes
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _descriptionFocus = FocusNode();
+  final FocusNode _locationFocus = FocusNode();
 
   // Form style
   TextStyle _formTextStyle = TextStyle(color: Colors.white);
@@ -79,6 +96,21 @@ class _NewTrackState extends State<NewTrack> {
     _formLocationController.text = description;
   }
 
+  /// Show map, centered at [StartTrackMap][_center].
+  /// Return value is the clicked coords in map
+  /// 
+  getStartPositionMap() async {
+    var result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) {
+        return new StartTrackMap();
+      })
+    );
+    if (result != null) {
+      print( result );
+    }
+  }
+
+
   /// Save or update track data 
   /// Used as closure in SubmitBtnWithState
   /// 
@@ -104,6 +136,17 @@ class _NewTrackState extends State<NewTrack> {
         : 0.0,
       );
       widget.track.coords = GeoLocationService.gls.latlngToJson(startCoords);
+
+      /// If coords are zero, try to get coords from location name
+      if (startCoords.latitude == 0.0 && startCoords.longitude == 0.0) {
+        List<Placemark> placemarks = await GeoLocationService.gls.getPlacemarksFromLocationName(widget.track.location);
+       if (placemarks.length > 0) {
+          print(placemarks[0].position);
+          startCoords.latitude = placemarks[0].position.latitude;
+          startCoords.longitude = placemarks[0].position.longitude;
+          widget.track.coords = GeoLocationService.gls.latlngToJson(startCoords);
+        }
+      }
 
       /// options
       Map<String, dynamic> options = {"type" : _trackType};
@@ -207,7 +250,11 @@ class _NewTrackState extends State<NewTrack> {
               style: _formTextStyle,
               controller: _formNameController,
               keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.done,
+              textInputAction: TextInputAction.next,
+              focusNode: _nameFocus,
+              onFieldSubmitted: (term) {
+                _fieldFocusChange(context, _nameFocus, _descriptionFocus);
+              },
               cursorColor: Colors.white,
               decoration: _formInputDecoration,
               validator: (value) {
@@ -225,6 +272,11 @@ class _NewTrackState extends State<NewTrack> {
               style: _formTextStyle,
               controller: _formDescriptionController,
               keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.next,
+              focusNode: _descriptionFocus,
+              onFieldSubmitted: (term) {
+                _fieldFocusChange(context, _descriptionFocus, _locationFocus);
+              },
               decoration: InputDecoration(
                 labelText: "Description",
                 labelStyle: TextStyle(color: Colors.white70),
@@ -260,21 +312,57 @@ class _NewTrackState extends State<NewTrack> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TextFormField(
-                controller: _formLocationController,
-                style: _formTextStyle,
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  labelText: 'Location name',
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter location name';
-                  }
-                  return null;
-                },
-              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  Flexible(
+                    child: TextFormField(
+                      controller: _formLocationController,
+                      style: _formTextStyle,
+                      textInputAction: TextInputAction.done,
+                      focusNode: _locationFocus,
+                      onFieldSubmitted: (term) {
+                        _fieldFocusChange(context, _locationFocus, _locationFocus);
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Location Name',
+                        labelStyle: TextStyle(color: Colors.white70,),
+                      ),
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'Please enter location name';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  FlatButton.icon(
+                    onPressed: getStartPositionMap,
+                    icon: Icon(Icons.map,
+                    color: Colors.white,),
+                    label: Text(' '),
+                  )
+                ],
+              )
+              // child: TextFormField(
+              //   controller: _formLocationController,
+              //   style: _formTextStyle,
+              //   textInputAction: TextInputAction.done,
+              //   focusNode: _locationFocus,
+              //   onFieldSubmitted: (term) {
+              //     _fieldFocusChange(context, _locationFocus, _locationFocus);
+              //   },
+              //   decoration: InputDecoration(
+              //     labelText: 'Location name',
+              //     labelStyle: TextStyle(color: Colors.white70),
+              //   ),
+              //   validator: (value) {
+              //     if (value.isEmpty) {
+              //       return 'Please enter location name';
+              //     }
+              //     return null;
+              //   },
+              // ),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 16.0, top: 8.0),
@@ -289,7 +377,7 @@ class _NewTrackState extends State<NewTrack> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   Flexible(
-                      child: TextFormField(
+                    child: TextFormField(
                     controller: _formStartLatitudeController,
                     style: _formTextStyle,
                     decoration: InputDecoration(
@@ -341,6 +429,60 @@ class _NewTrackState extends State<NewTrack> {
             ),
         ],
       ),
+    );
+  }
+
+  _fieldFocusChange(BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
+    currentFocus.unfocus();
+    if (currentFocus == _locationFocus) {
+      // here we start validating the location name
+      checkLocationName(_formLocationController.text);
+    } else {
+      FocusScope.of(context).requestFocus(nextFocus);
+    }
+    
+  }
+
+  /// If [getPlacementFromLoctionName] return null then ...
+  /// If [placemarks] list has more then one entry then...
+  /// 
+  checkLocationName(String locationName) async {
+    try {
+      List<Placemark> placemarks = await GeoLocationService.gls.getPlacemarksFromLocationName(locationName);
+      if (placemarks.length > 0) {
+        locationDialog(placemarks[0]);        
+      } 
+    } catch (e) {
+      print(e);
+      locationDialog();
+    }
+  }
+
+  /// If parameter [placemark] is null 
+  /// - no valid location name?
+  /// - no internet connection?
+  /// More the one [Placemark] possible
+  locationDialog([Placemark placemark]) {
+    String contentString = placemark != null ? 
+      "${placemark.name} at ${placemark.position.latitude}, ${placemark.position.longitude}"
+      : "No Infos for this location!";
+      contentString += "\n${AppStatus.appStatus.connectivityResult.toString()}";
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(contentString),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () {
+                _formStartLatitudeController.text = placemark.position.longitude.toString();
+                _formStartLongitudeController.text = placemark.position.latitude.toString();
+              },)
+          ],
+        );
+      }
     );
   }
 }

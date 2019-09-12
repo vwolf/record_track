@@ -7,6 +7,8 @@ import 'l10n/messages_all.dart';
 
 import 'select/selectView.dart';
 
+import 'services/status.dart';
+
 /// Example uses locale.countryĆode, which is not working as countyCode is null
 /// 
 class DemoLocalizations {
@@ -121,4 +123,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-void main() => runApp(MyApp());
+//void main() => runApp(MyApp());
+void main () {
+
+  AppStatus.appStatus.checkConnection();
+
+  runApp(MyApp());
+}
