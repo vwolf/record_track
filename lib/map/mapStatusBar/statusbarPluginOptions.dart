@@ -101,8 +101,8 @@ class StatusbarLayer extends StatelessWidget {
 }
 
 
-class StatusBar extends StatelessWidget {
+// class StatusBar extends StatelessWidget {
 
-  @override 
-  Widget build(BuildContext context) {}
-}
+//   @override 
+//   Widget build(BuildContext context) {}
+// }

@@ -44,6 +44,15 @@ class MapPageState extends State<MapPage> {
 
   }
 
+  @override 
+  void dispose() {
+    if (_streamController != null) {
+      _streamController.close();
+    }
+    super.dispose();
+  }
+
+
   /// Initialize [_streamController] subscription to listen for TrackPageStreamMsg
   initStreamController() {
     _streamController.stream.listen((TrackPageStreamMsg trackingPageStreamMsg) {

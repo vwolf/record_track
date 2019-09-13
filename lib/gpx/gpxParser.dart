@@ -14,7 +14,6 @@
 /// ToDo parse only tour meta data for new tour
 ///
 import 'package:xml/xml.dart' as xml;
-import 'package:latlong/latlong.dart';
 import 'gpxFileData.dart';
 
 class GpxParser {
@@ -55,7 +54,7 @@ class GpxParser {
     Iterable<xml.XmlElement> items = document.findElements('trk');
     items.map((xml.XmlElement item) {
       var trkName = getValue(item.findElements('name'));
-      trackName == "" ?? (trackName = trkName);
+      (trackName == "") ?? (trackName = trkName);
       gpxFileData.trackSeqName = trkName;
     }).toList(growable: true);
 

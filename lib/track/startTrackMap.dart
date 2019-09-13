@@ -71,6 +71,6 @@ class StartTrackMap extends StatelessWidget {
   void _handleTap(LatLng latlng) {
     print ("_handleTap at ${latlng.latitude}, ${latlng.longitude}");
 
-    Navigator.pop(_context, "map location");
+    Navigator.pop(_context, latlng);
   }
 }

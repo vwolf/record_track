@@ -86,6 +86,7 @@ class _TrackListItemState extends State<TrackListItem> {
             setState(() { });
           });
           print(childSize);
+          return true;
         },
       );
     }

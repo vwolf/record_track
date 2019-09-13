@@ -31,12 +31,13 @@ import 'startTrackMap.dart';
 ///    Enter location name -> use offline map tiles to set start position
 class NewTrack extends StatefulWidget {
 
-  Track track = Track();
+  final Track track = Track();
+  //Track _track;
 
   NewTrack();
 
   NewTrack.withTrack(Track track) {
-    this.track = track;  
+    //this._track = track;  
   }
 
   @override 
@@ -97,17 +98,23 @@ class _NewTrackState extends State<NewTrack> {
   }
 
   /// Show map, centered at [StartTrackMap][_center].
-  /// Return value is the clicked coords in map
+  /// Return value is the clicked coords []in map
   /// 
   getStartPositionMap() async {
-    var result = await Navigator.of(context).push(
+    LatLng result = await Navigator.of(context).push(
       MaterialPageRoute(builder: (context) {
         return new StartTrackMap();
       })
     );
     if (result != null) {
-      print( result );
-    }
+      print( "getStartPositionResult: ${result.latitude}, ${result.longitude}" );
+      _formStartLatitudeController.text = result.latitude.toString();
+      _formStartLongitudeController.text = result.longitude.toString();
+      // get location name for position
+      String description = await GeoLocationService.gls.getCoordDescription(result);
+      _formLocationController.text = description;
+
+    } else {}
   }
 
 
@@ -477,8 +484,9 @@ class _NewTrackState extends State<NewTrack> {
             FlatButton(
               child: Text("OK"),
               onPressed: () {
-                _formStartLatitudeController.text = placemark.position.longitude.toString();
-                _formStartLongitudeController.text = placemark.position.latitude.toString();
+                _formStartLatitudeController.text = placemark.position.latitude.toString();
+                _formStartLongitudeController.text = placemark.position.longitude.toString();
+                Navigator.of(context).pop();
               },)
           ],
         );
