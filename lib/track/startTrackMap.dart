@@ -9,6 +9,8 @@ class StartTrackMap extends StatelessWidget {
   LatLng _center = LatLng(53.00, 13.00);
   BuildContext _context;
 
+  StartTrackMap();
+  
   @override
   Widget build(BuildContext context) {
     _context = context;

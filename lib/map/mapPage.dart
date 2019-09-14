@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:latlong/latlong.dart';
+//import 'package:latlong/latlong.dart';
 
 import '../track/trackService.dart';
 import 'mapTrack.dart';
@@ -98,7 +98,7 @@ class MapPageState extends State<MapPage> {
   /// ToDo Needs some style and more possible content (profile height?)
   ///
   Widget get _trackInfoSheet {
-
+    return Container();
   }
 
   /// Use [WillPopScope] to close [OverlayEntry] [imageOverlay]

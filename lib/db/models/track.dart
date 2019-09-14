@@ -24,6 +24,9 @@ class Track {
   String track;
   String items;
   String createdAt;
+  // not saved to db
+  String offlineMapPath;
+  String gpxFilePath;
 
   Track({
     this.id,

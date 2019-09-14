@@ -54,7 +54,9 @@ class GpxParser {
     Iterable<xml.XmlElement> items = document.findElements('trk');
     items.map((xml.XmlElement item) {
       var trkName = getValue(item.findElements('name'));
-      (trackName == "") ?? (trackName = trkName);
+      if (trackName == "") { 
+        trackName = trkName; 
+      }
       gpxFileData.trackSeqName = trkName;
     }).toList(growable: true);
 

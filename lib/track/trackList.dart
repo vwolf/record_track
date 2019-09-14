@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'trackListService.dart';
 import '../db/database.dart';
 import '../db/models/track.dart';
 import 'trackService.dart';
@@ -35,8 +36,13 @@ class _TrackListState extends State<TrackList> {
   Future<List<Track>> getTracks() async {
     List tracks = await DBProvider.db.getAllTracks();
     _tracks = tracks;
+
+    List<Track> gpxTracks = await TrackListService().getAllTracksFromFile();
+    _tracks.addAll(gpxTracks);
+    
     return _tracks;
   }
+
 
   editTour(BuildContext context, Track track) {
 

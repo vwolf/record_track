@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+//import 'package:flutter/semantics.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 

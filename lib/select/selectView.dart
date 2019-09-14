@@ -19,6 +19,8 @@ class SelectPage extends StatelessWidget {
     );
   }
 
+  /// Start tracking now. 
+  /// Create new track
   void _startTrack() {
     debugPrint("startTrack");
   }

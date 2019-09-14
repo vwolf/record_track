@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -25,10 +26,17 @@ import 'startTrackMap.dart';
 ///    [getStartPosition] -> [GeoLocationService] []
 /// 3. Click Add sign to get current position.
 ///    Get [Placemark] for current position
+/// 4. Click on map icon next to location name to display a map to
+///    choose a position on map.
+///    After a position [LatLng] is selected on map, try to get 
+///    [Placemark] for position. If there is a [Placemark] use 
+///    [Placemark.name] as location name.
+/// 
 /// All this will only work if connected to internet
 /// 4. No connection 
 ///    Enter location name -> no coords -> use default coords
 ///    Enter location name -> use offline map tiles to set start position
+/// 
 class NewTrack extends StatefulWidget {
 
   final Track track = Track();
@@ -98,7 +106,7 @@ class _NewTrackState extends State<NewTrack> {
   }
 
   /// Show map, centered at [StartTrackMap][_center].
-  /// Return value is the clicked coords []in map
+  /// Return value is the clicked coords [] in map
   /// 
   getStartPositionMap() async {
     LatLng result = await Navigator.of(context).push(
@@ -461,7 +469,7 @@ class _NewTrackState extends State<NewTrack> {
       } 
     } catch (e) {
       print(e);
-      locationDialog();
+      noLocationDialog();
     }
   }
 
@@ -493,8 +501,40 @@ class _NewTrackState extends State<NewTrack> {
       }
     );
   }
-}
 
+
+  /// Dialog if no location available
+  /// Network connection or WiFi?
+  /// 
+  noLocationDialog() {
+    String contentString = "No Infos for this location!";
+    ConnectivityResult connect = AppStatus.appStatus.connectivityResult;
+    if (connect == ConnectivityResult.none) {
+      contentString += "\nNo Network Connection";
+    } else {
+      contentString += "\nThere is a network connection, but no internet service.";
+    }
+    contentString += "\nEnter a name for location.";
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(contentString),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      }
+    );
+  }
+
+
+}
 
 class SubmitBtnWithState extends StatefulWidget {
   final void Function(int) callback;

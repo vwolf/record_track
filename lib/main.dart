@@ -126,7 +126,9 @@ class _MyHomePageState extends State<MyHomePage> {
 //void main() => runApp(MyApp());
 void main () {
 
-  AppStatus.appStatus.checkConnection();
+  AppStatus.appStatus.checkConnection(); 
+
+  AppStatus.appStatus.setDirectorys();
 
   runApp(MyApp());
 }
