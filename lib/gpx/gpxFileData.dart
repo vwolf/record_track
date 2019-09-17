@@ -1,6 +1,9 @@
 import 'package:latlong/latlong.dart';
 import '../db/models/waypoint.dart';
 
+
+/// Class to hold parsed gpx file data.
+/// 
 class GpxFileData {
   String trackName = "";
   String trackDescription = "";
@@ -9,6 +12,8 @@ class GpxFileData {
   List<GpxCoord> gpxCoords = [];
   List<LatLng> gpxLatLng = [];
   List<Waypoint> wayPoints = [];
+  String createdAt = "9999";
+  Map<String, dynamic> options = {};
 
   /// Convert to LatLng
   coordsToLatLng() {
@@ -20,6 +25,10 @@ class GpxFileData {
 
   addWaypoint(List<Waypoint> newWaypoints) {
     wayPoints.addAll(newWaypoints);
+  }
+
+  addOption(String option, dynamic value) {
+    options.addAll({option: value});
   }
 }
 

@@ -163,7 +163,7 @@ class TrackTable {
     return null;
   }
 
-Future<int> trackExists(Database db, String query) async {
+  Future<int> trackExists(Database db, String query) async {
     try {
       List<Map> maps =
           await db.rawQuery("SELECT id FROM TOUR WHERE name = ? ", [query]);
@@ -176,4 +176,9 @@ Future<int> trackExists(Database db, String query) async {
     return null;
   }
 
+  /// Add track point to track.
+  /// 
+  Future<void> addTrackPoint() async {
+    
+  }
 }

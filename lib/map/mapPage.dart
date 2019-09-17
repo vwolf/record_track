@@ -27,6 +27,7 @@ class MapPageState extends State<MapPage> {
   /// Communication with map via streams
   StreamController<TrackPageStreamMsg> _streamController = StreamController.broadcast();
 
+  /// Create map view
   MapTrack get _mapTrack => MapTrack(widget.trackService, _streamController);
   
   /// For persistent bottomsheet
@@ -110,7 +111,7 @@ class MapPageState extends State<MapPage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text(""),
+          title: Text("${widget.trackService.gpxFileData.trackName}"),
         ),
         body: Column(children: <Widget>[
           _mapTrack,

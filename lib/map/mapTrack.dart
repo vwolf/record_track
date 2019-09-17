@@ -94,13 +94,27 @@ class MapTrackState extends State<MapTrack> {
             textStyle: TextStyle(color: Colors.blue, fontSize: 12),
             padding: EdgeInsets.all(10),
           ),
+          
+          PolylineLayerOptions(
+            polylines: [
+              Polyline(
+                points: trackService.gpxFileData.gpxLatLng,
+                strokeWidth: 4.0,
+                color: Colors.blueAccent,
+              )
+            ]
+          ),
           StatusbarLayerPluginOption(
             eventCallback: statusbarCallback,
             offlineMode: _offline,
             location: _location,
           ),
           MarkerLayerOptions(
-            markers: gpsPositionList )
+            markers: gpsPositionList 
+          ),
+          MarkerLayerOptions(
+            markers: trackStartEndMarker
+          )
         ], 
       ),
     );
@@ -206,6 +220,30 @@ class MapTrackState extends State<MapTrack> {
         );
         ml.add(newMarker);
     }
+    return ml;
+  }
+
+  List<Marker> get trackStartEndMarker => makeTrackStartEndMarker();
+
+  List<Marker> makeTrackStartEndMarker() {
+    List<Marker> ml = [];
+
+    if (trackService.trackLatLngs.length > 0) {
+      Marker newMarker = Marker(
+        width: 40.0,
+        height: 40.0,
+        point: trackService.trackLatLngs.first,
+        builder: (ctx) =>
+          Container(
+            child: Icon(
+              Icons.pin_drop,
+              color: Colors.green,
+            ),
+          )
+        );
+        ml.add(newMarker);
+    }
+
     return ml;
   }
 

@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:record_track/db/models/trackCoord.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'models/track.dart';
 import 'trackTable.dart';
+import 'trackCoord.dart';
 
 /// Database sqlite
 /// 
@@ -15,6 +17,7 @@ class DBProvider {
   final databaseName = "TracksDB.db";
 
   TrackTable _trackTable;
+  TrackCoordTable _trackCoordTable;
 
   DBProvider._();
   static final DBProvider db = DBProvider._();
@@ -26,7 +29,8 @@ class DBProvider {
     }
 
     _trackTable = TrackTable();
-    
+    _trackCoordTable = TrackCoordTable();
+
     _database = await _initDB(databaseName);
     return _database;
   }
@@ -89,5 +93,14 @@ class DBProvider {
     return _trackTable.cloneTrack(db, newTrack, oldTrackName);
   }
 
- 
+  /// TrackCoord Table queries
+  addTrackCoord(TrackCoord trackCoord, String trackCoordTable) async {
+    final db = await database;
+    return _trackCoordTable.addTrackCoord(db, trackCoord, trackCoordTable);
+  }
+
+  Future<List<TrackCoord>> getTrackCoords(String trackCoordTable) async {
+    final db = await database;
+    return _trackCoordTable.getTrackCoords(db, trackCoordTable);
+  }
 }

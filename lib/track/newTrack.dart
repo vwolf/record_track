@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as prefix0;
 import 'package:geolocator/geolocator.dart';
 
 import 'package:latlong/latlong.dart';
 import 'package:flutter/rendering.dart';
+import 'package:record_track/db/models/trackCoord.dart';
 import 'package:record_track/gpx/gpxFileData.dart';
 import 'package:record_track/gpx/gpxParser.dart';
 
@@ -40,13 +42,13 @@ import 'startTrackMap.dart';
 class NewTrack extends StatefulWidget {
 
   final Track track = Track();
-  //Track _track;
-
+  Track _track = Track();
+  
   NewTrack();
 
   NewTrack.withTrack(Track track) {
-    //this._track = track;  
-  }
+    this._track = track;
+  } 
 
   @override 
   _NewTrackState createState() => _NewTrackState();
@@ -84,6 +86,32 @@ class _NewTrackState extends State<NewTrack> {
   @override 
   void initState() {
     super.initState();
+
+    if (widget._track.name != null) {
+      insertSavedTrack();
+    }
+  }
+
+  /// Insert values from saved track[widget._track] into Formfields
+  /// 
+  void insertSavedTrack() {
+    _newTrack = false;
+      _formSaved = true;
+      _formNameController.text = widget._track.name;
+      _formDescriptionController.text = widget._track.description;
+      _formLocationController.text = widget._track.location;
+
+      if (widget._track.coords != null) {
+        LatLng trackCoords = GeoLocationService.gls.stringToLatLng(widget._track.coords);
+        _formStartLatitudeController.text = trackCoords.latitude.toString();
+        _formStartLongitudeController.text = trackCoords.longitude.toString();
+      }
+
+      if (widget._track.options != null) {
+
+      }
+
+      savedTrack = widget._track;
   }
 
 
@@ -128,7 +156,10 @@ class _NewTrackState extends State<NewTrack> {
 
   /// Save or update track data 
   /// Used as closure in SubmitBtnWithState
-  /// 
+  /// Change tracks read from gpx files?
+  ///  Write changes to an local text file?
+  ///  Write changes to gpx file?
+  ///  Write track to db, write changes and mark track entry
   Future submitEvent(int i) async {
     if ( !_newTrack ) {
 
@@ -180,9 +211,15 @@ class _NewTrackState extends State<NewTrack> {
       /// Write to db, returns int
       var dbResult = await DBProvider.db.newTrack(widget.track);
       print(dbResult);
+
+      /// Add [widget.track.coords] to track coords
+      TrackCoord trackCoord = TrackCoord(latitude: startCoords.latitude, longitude: startCoords.longitude);
+      var addTrackCoordResult = await DBProvider.db.addTrackCoord(trackCoord, widget.track.track);
+      debugPrint("addTrackCoordResult $addTrackCoordResult");
       _formSaved = true;
     }
   }
+
 
   Future getTrack() async {
     final filePath = await ReadFile().getPath();
@@ -246,6 +283,7 @@ class _NewTrackState extends State<NewTrack> {
       ),
       body: ListView(
         children: <Widget>[
+           _gpxFileInfo,
           _form,
         ],
       ),
@@ -432,13 +470,13 @@ class _NewTrackState extends State<NewTrack> {
                       color: Colors.blue,
                       onPressed: getTrack,
                     ),
-                    FlatButton.icon(
-                      onPressed: _formSaved == true ? getImage : null,
-                      icon: new Icon(Icons.image),
-                      label: Text('Add Image'),
-                      disabledColor: Colors.white30,
-                      color: Colors.blue,
-                    ),
+                    // FlatButton.icon(
+                    //   onPressed: _formSaved == true ? getImage : null,
+                    //   icon: new Icon(Icons.image),
+                    //   label: Text('Add Image'),
+                    //   disabledColor: Colors.white30,
+                    //   color: Colors.blue,
+                    // ),
                   ],
                 ),
             ),
@@ -534,6 +572,17 @@ class _NewTrackState extends State<NewTrack> {
   }
 
 
+  Widget get _gpxFileInfo {
+    if (savedTrack != null) {
+      return Padding(
+        padding: EdgeInsets.only(left: 16.0, right: 12.0, top: 12.0),
+        child: Text("This track is loaded from ${savedTrack.gpxFilePath}"),
+      
+      );
+    } else {
+      return Container();
+    }
+  }
 }
 
 class SubmitBtnWithState extends StatefulWidget {

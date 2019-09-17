@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
-import 'trackListService.dart';
+
 import '../db/database.dart';
 import '../db/models/track.dart';
 import 'trackService.dart';
-
 import 'trackListItem.dart';
 import '../map/mapPage.dart';
+import 'newTrack.dart';
 
 /// Display all saved tracks in ListView
 /// 
 class TrackList extends StatefulWidget {
 
-  TrackList();
+  final List<Track> tracks;
+  TrackList(this.tracks);
 
   @override 
   _TrackListState createState() => _TrackListState();
@@ -20,32 +21,106 @@ class TrackList extends StatefulWidget {
 
 class _TrackListState extends State<TrackList> {
 
+  _TrackListState();
+
+  List<Track> _tracks = [];
+  ListSortState trackSortState = ListSortState.unsorted;
+
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Tracks"),
+      ),
+      endDrawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            const DrawerHeader(
+              child: const Center(
+                child: const Text("Sorting"),
+              ),
+            ),
+            ListTile(
+              title: Text("Date created"),
+              trailing: IconButton(
+                icon: Icon(Icons.sort),
+                onPressed: () {
+                  sortTracks("date");
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            
+            ListTile(
+              title: Text("Name"),
+              trailing: IconButton(
+                icon: Icon(Icons.sort_by_alpha),
+                onPressed: () {
+                  sortTracks("alphabethically");
+                  Navigator.pop(context);
+                },
+              ),
+            ) 
+          ],
         ),
+      ),
       body: _buildFutureList(context)
     );
   }
 
-  List<Track> _tracks = [];
+ 
 
-  /// Get all [Track] in db and as gpx files
+  /// Get all [Track] in db and as gpx files.
+  /// 
   Future<List<Track>> getTracks() async {
-    List tracks = await DBProvider.db.getAllTracks();
-    _tracks = tracks;
-
-    List<Track> gpxTracks = await TrackListService().getAllTracksFromFile();
-    _tracks.addAll(gpxTracks);
-    
+    _tracks = widget.tracks;
     return _tracks;
+  }
+
+  /// Sort items in [tracks].
+  /// [order] == alphabethically then switch between [ListSortState.alpabethicallyDown]
+  /// and [ListSortState.alpabethicallyUp].
+  sortTracks(String order) {
+    if (order == "alphabethically" )  {
+      if(trackSortState != ListSortState.alpabethicallyDown) {
+        widget.tracks.sort((a, b) {
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        trackSortState = ListSortState.alpabethicallyDown;
+      } else {
+        widget.tracks.sort((a, b) {
+          return b.name.toLowerCase().compareTo(a.name.toLowerCase());
+        });
+        trackSortState = ListSortState.alpabethicallyUp;
+      }
+    }
+
+    if (order == "date") {
+      if(trackSortState != ListSortState.dateDown) {
+        widget.tracks.sort((a, b) {
+          return a.createdAt.toLowerCase().compareTo(b.createdAt.toLowerCase());
+        });
+        trackSortState = ListSortState.dateDown;
+      } else {
+        widget.tracks.sort((a, b) {
+          return b.createdAt.toLowerCase().compareTo(a.createdAt.toLowerCase());
+        });
+        trackSortState = ListSortState.dateUp;
+      }
+    }
+
+    setState(() {
+      
+    });
   }
 
 
   editTour(BuildContext context, Track track) {
-
+    Navigator.of(context).push(
+      new MaterialPageRoute(builder: (context) {
+        return NewTrack.withTrack(track);
+      })
+    );
   }
 
   /// Go to Save tour to external page
@@ -64,24 +139,48 @@ class _TrackListState extends State<TrackList> {
     if (_tracks[index].track != null ) {
       DBProvider.db.deleteTable(_tracks[index].track);
     }
-    if (_tracks[index].items != null ) {
-      DBProvider.db.deleteTable(_tracks[index].items);
+    if (widget.tracks[index].items != null ) {
+      DBProvider.db.deleteTable(widget.tracks[index].items);
     }
-    DBProvider.db.deleteTrack(_tracks[index].id);
-
+    DBProvider.db.deleteTrack(widget.tracks[index].id);
+    
+    if (_tracks[index] != null) {
+      _tracks.removeAt(index);
+    }
     setState(() {});
   }
 
 
-  goTrackDetailPage(Track track) {
+  goTrackDetailPage(TrackService trackService) {
     setState(() {
       
     });
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) {
-        return new MapPage(TrackService(track));
+        return new MapPage(trackService);
       })
     );
+  }
+
+  /// Handle tap on list item.
+  /// [Track] at [trackAtIndex] can be
+  /// - read from db
+  /// - read from gpx file
+  /// 
+  _handleTap(Track trackAtIndex) async {
+    TrackService trackService = TrackService(trackAtIndex);
+
+    if (trackAtIndex.gpxFilePath != null) {
+      // there is a gpx file with the track points
+      await trackService.getTrack(trackAtIndex.gpxFilePath).then((r) {
+
+      }).whenComplete(() {
+        goTrackDetailPage(trackService);
+      });
+    } else {
+      trackService.loadTrack(trackAtIndex);
+      goTrackDetailPage(trackService);
+    }
   }
 
 
@@ -135,15 +234,22 @@ class _TrackListState extends State<TrackList> {
                         backgroundColor: Colors.white70
                     ),
                 ],
+                // child: Container(
+                //   padding: EdgeInsets.only(top: 2.0),
+                //   child: Text(snapshot.data[index].location),
+                // ));
                 child: Container(
                   padding: const EdgeInsets.only(top: 2.0),
-                  height: 115,
+                  height: 120,
+                  //constraints: BoxConstraints(maxHeight: 200.0, minHeight: 100.0),
+                  //constraints: BoxFit.fitHeight,
+                  //height: double.infinity,
                   child: Card(child: InkWell(
                     onTap: () {
-                      goTrackDetailPage(snapshot.data[index]);
+                      _handleTap(snapshot.data[index]);
                     },
                     child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       leading: Container(
                         padding: EdgeInsets.only(right: 10.0),
                         decoration: BoxDecoration(
@@ -157,14 +263,15 @@ class _TrackListState extends State<TrackList> {
                         ),
                       ),
                       title: Text(snapshot.data[index].name,
-                        style: Theme.of(context).textTheme.headline,
+                        style: TextStyle(fontSize: 22.0),
+                        //style: Theme.of(context).textTheme.display1,
                       ),
-                      // subtitle: ListView(
-                      //   scrollDirection: Axis.horizontal,
-                      //   children: <Widget>[
-                      //     Text(snapshot.data[index].location),
-                      //   ],
-                      // ),
+                      subtitle: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: <Widget>[
+                          Text(snapshot.data[index].location),
+                        ],
+                      ),
                       trailing: Icon(Icons.keyboard_arrow_right, size: 30.0,),
                     )
                   ),
@@ -221,4 +328,13 @@ class _TrackListState extends State<TrackList> {
   //     },
   //   );
   // }
+}
+
+
+enum ListSortState {
+  unsorted,
+  alpabethicallyUp,
+  alpabethicallyDown,
+  dateUp,
+  dateDown
 }

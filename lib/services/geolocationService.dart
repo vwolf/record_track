@@ -37,7 +37,7 @@ class GeoLocationService {
   }
 
   /// Map TrackCoord's to LatLng object
-  List<LatLng> latlngToLatLng(List<TrackCoord> trackCoords) {
+  List<LatLng> coordsToLatLng(List<TrackCoord> trackCoords) {
     List<LatLng> latlngFromCoords = [];
     trackCoords.forEach((TrackCoord trackCoord) {
       latlngFromCoords.add(LatLng(trackCoord.latitude, trackCoord.longitude));

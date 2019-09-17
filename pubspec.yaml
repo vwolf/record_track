@@ -14,7 +14,7 @@ description: A new Flutter application.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -27,6 +27,7 @@ dependencies:
 
   sqflite: ^1.1.1
   path_provider: any
+  path_provider_ex: 
   file_picker: ^1.1.1
   xml: ^3.5.0
   geolocator: ^5.0.0

@@ -17,9 +17,10 @@ class TrackItem {
   int id;
   String name;
   String info;
+  String type;
   DateTime timestamp;
   String latlng;
-  List images;
+  List <String>images;
   String createdAt;
   int markerId;
 
@@ -27,6 +28,7 @@ class TrackItem {
     this.id,
     this.name,
     this.info,
+    this.type,
     this.timestamp,
     this.latlng,
     this.images,
@@ -38,6 +40,7 @@ class TrackItem {
     id: json["id"],
     name: json["name"],
     info: json["info"],
+    type: json["type"],
     timestamp: DateTime.parse(json['timestamp']),
     latlng: json['latlng'],
     images: jsonDecode(json['images']),
@@ -49,6 +52,7 @@ class TrackItem {
     "id": id,
     "name": name,
     "info": info,
+    "type": type,
     "timestamp": timestamp.toIso8601String(),
     "latlng": latlng,
     "images": jsonEncode(images),

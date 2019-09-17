@@ -14,6 +14,8 @@
 /// ToDo parse only tour meta data for new tour
 ///
 import 'package:xml/xml.dart' as xml;
+import 'package:latlong/latlong.dart';
+
 import 'gpxFileData.dart';
 
 class GpxParser {
@@ -33,6 +35,7 @@ class GpxParser {
     // what xml schema
     var root = document.findElements('gpx');
     root.forEach((xml.XmlElement f) {
+      // print("documentType: ${f.getAttribute("xmlns:gpxx")}");
       if (f.getAttribute("xmlns:gpxx") != null) {
         documentType = GPXDocumentType.gpxx;
       }
@@ -45,13 +48,15 @@ class GpxParser {
     String trackName = "";
     Iterable<xml.XmlElement> metadataItems = document.findAllElements('metadata');
 
-    metadataItems.map((xml.XmlElement metadataItem) {
-      trackName = getValue(metadataItem.findElements('name'));
-      trackName == null ?? getValue(metadataItem.findElements('description'));
-    }).toList(growable: true);
-
+    if (metadataItems.isNotEmpty) {
+      metadataItems.map((xml.XmlElement metadataItem) {
+        trackName = getValue(metadataItem.findElements('name'));
+        trackName == null ?? getValue(metadataItem.findElements('description'));
+      }).toList(growable: true);
+    }
+    
     // track seqment name
-    Iterable<xml.XmlElement> items = document.findElements('trk');
+    Iterable<xml.XmlElement> items = document.findAllElements('trk');
     items.map((xml.XmlElement item) {
       var trkName = getValue(item.findElements('name'));
       if (trackName == "") { 
@@ -66,12 +71,20 @@ class GpxParser {
       Iterable<xml.XmlElement> wpt = document.findAllElements('wpt');
       trkList = parseGpxx(wpt);
     } else {
-      Iterable<xml.XmlElement> trkseg = document.findAllElements('trkseq');
+      Iterable<xml.XmlElement> trkseg = document.findAllElements('trkseg');
       trkList = parseGpx(trkseg);
     }
 
     gpxFileData.trackName = trackName != null ? trackName : "?";
     gpxFileData.gpxCoords = trkList;
+
+    /// [GpxFileData.defaultCoords] is the first track point
+    /// 
+    if (gpxFileData.gpxCoords.length > 0) {
+      gpxFileData.defaultCoord = LatLng(trkList.first.lat, trkList.first.lon);
+    }
+
+    gpxFileData.addOption("type", "walk");
 
     return gpxFileData;
   }
