@@ -142,4 +142,16 @@ class TrackCoordTable {
       print ("DatabaseException $e");
     }
   }
+
+  /// Replace [TrackCoord] with id in db
+  /// 
+  replaceTrackCoord(Database db, String tableName, TrackCoord trackCoord) async {
+    try {
+      await db.update("$tableName", trackCoord.toMap(), where: "id = ?", whereArgs: [trackCoord.id]);
+      return 1;
+    } on DatabaseException catch (e) {
+      print ("DatabaseException $e");
+    }
+    return 0;
+  }
 }

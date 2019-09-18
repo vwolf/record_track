@@ -169,18 +169,25 @@ class _TrackListState extends State<TrackList> {
   /// 
   _handleTap(Track trackAtIndex) async {
     TrackService trackService = TrackService(trackAtIndex);
-
-    if (trackAtIndex.gpxFilePath != null) {
-      // there is a gpx file with the track points
-      await trackService.getTrack(trackAtIndex.gpxFilePath).then((r) {
-
-      }).whenComplete(() {
-        goTrackDetailPage(trackService);
+    await trackService.getTrack().then((r) {
+      setState(() {
+        
       });
-    } else {
-      trackService.loadTrack(trackAtIndex);
+    }).whenComplete(() {
       goTrackDetailPage(trackService);
-    }
+    });
+
+    // if (trackAtIndex.gpxFilePath != null) {
+    //   // there is a gpx file with the track points
+    //   await trackService.getTrack().then((r) {
+
+    //   }).whenComplete(() {
+    //     goTrackDetailPage(trackService);
+    //   });
+    // } else {
+    //   await trackService.loadTrack(trackAtIndex);
+    //   goTrackDetailPage(trackService);
+    // }
   }
 
 

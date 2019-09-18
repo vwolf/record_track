@@ -63,9 +63,9 @@ class DBProvider {
     return _trackTable.newTrack(db, newTrack);
   }
 
-  updateTrack(Track tour) async {
+  updateTrack(Track track) async {
     final db = await database;
-    return _trackTable.updateTrack(db, tour);
+    return _trackTable.updateTrack(db, track);
   }
 
   deleteTrack(int id) async {
@@ -102,5 +102,15 @@ class DBProvider {
   Future<List<TrackCoord>> getTrackCoords(String trackCoordTable) async {
     final db = await database;
     return _trackCoordTable.getTrackCoords(db, trackCoordTable);
+  }
+
+  updateTrackCoord(int id, String trackCoordTable, String prop, dynamic val) async {
+    final db = await database;
+    return _trackCoordTable.updateTrackCoord(db, trackCoordTable, id, prop, val);
+  }
+
+  replaceTrackCoord(String tableName, TrackCoord trackCoord) async {
+    final db = await database;
+    return _trackCoordTable.replaceTrackCoord(db, tableName, trackCoord);
   }
 }

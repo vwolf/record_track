@@ -7,8 +7,9 @@ class StatusbarLayerPluginOption extends LayerOptions {
   StatusbarEvent eventCallback;
   bool offlineMode;
   bool location;
+  bool edit;
 
-  StatusbarLayerPluginOption( {this.eventCallback, this.offlineMode, this.location } );
+  StatusbarLayerPluginOption( {this.eventCallback, this.offlineMode, this.location, this.edit } );
 }
 
 
@@ -87,6 +88,14 @@ class StatusbarLayer extends StatelessWidget {
               size: 36.0,
               ),
               onPressed: () => statusBarEvent("info"),
+            ),
+            IconButton(
+              icon:Icon(Icons.edit,
+              color: statusbarLayerOpts.edit ? Colors.orange : Colors.black26,
+              size: 36.0,
+            ),
+            onPressed: () => statusBarEvent("edit"),
+            
             ),
           ],
           )

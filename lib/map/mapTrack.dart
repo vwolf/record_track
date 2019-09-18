@@ -37,20 +37,24 @@ class MapTrackState extends State<MapTrack> {
   MapTrackState(this.trackService, this.streamController);
 
   MapController _mapController = MapController();
- 
+
   StreamController geoLocationStreamController;
 
   LatLng get startPos => widget.trackService.getTrackStart();
 
+  List<int> _activeMarker = [];
+
   // status values
   bool _offline = false;
   bool _location = false;
+  bool _edit = false;
 
   LatLng _currentPosition;
 
   /// This is the callback for the statusbar
   StatusbarEvent statusbarCall;
-
+  // track modified - save or reload?
+  bool trackModFlag = false;
 
   @override 
   void dispose() {
@@ -60,6 +64,9 @@ class MapTrackState extends State<MapTrack> {
     if (geoLocationStreamController != null) {
       geoLocationStreamController.close();
     } 
+    if (trackModFlag == true) {
+      trackService.saveTrack();
+    }
     super.dispose();
   }
 
@@ -98,7 +105,7 @@ class MapTrackState extends State<MapTrack> {
           PolylineLayerOptions(
             polylines: [
               Polyline(
-                points: trackService.gpxFileData.gpxLatLng,
+                points: trackService.trackLatLngs,
                 strokeWidth: 4.0,
                 color: Colors.blueAccent,
               )
@@ -108,6 +115,7 @@ class MapTrackState extends State<MapTrack> {
             eventCallback: statusbarCallback,
             offlineMode: _offline,
             location: _location,
+            edit: _edit,
           ),
           MarkerLayerOptions(
             markers: gpsPositionList 
@@ -121,17 +129,62 @@ class MapTrackState extends State<MapTrack> {
   }
 
 
-  /// Tap on map (not on marker or polyline)
-  ///
-  void _handleTap(LatLng latlng) async {}
-
-  void _handleLongPress(LatLng latlng) {
-    print("_handleLongPress at $latlng");
+  /// Tap on map (not on marker or polyline). 
+  /// 
+  /// Edit mode: 
+  /// - on tap add to new point to track
+  /// - 
+  void _handleTap(LatLng latlng) async {
+    print("mapTrack._handleTap ");
+    if (_edit && _activeMarker.length == 0) {
+      trackService.addPointToTrack(latlng);
+      setState(() {
+        
+      });
+    }
   }
+
+  /// Tap on map marker.
+  /// StartMarker: option to change track start coords
+  /// 
+  void _handleTapOnMarker(LatLng latlng, int index) {
+    debugPrint("_handleTapOnMarker at index: $index");
+    // start marker select / deselect
+    if (_activeMarker.contains(index)) {
+      _activeMarker.remove(index);
+    } else {
+      _activeMarker.add(index);
+    }
+
+    setState(() {
+        
+      });
+  }
+
+  /// Long tap on map
+  void _handleLongPress(LatLng latlng) {
+    print("mapTrack._handleLongPress at $latlng");
+    if(_activeMarker.contains(0) && _edit) {
+      widget.trackService.setTrackStart(latlng);
+      setState(() {
+        trackModFlag = true;
+      });
+    }
+  }
+
 
   void _handlePositionChange(MapPosition mapPosition, bool hasGesture) {
     //_mapStatusLayer.zoomNotification(_mapController.zoom.toInt());
   }
+
+  Color _getMarkerIconColor(int markerIndex) {
+    if (_activeMarker.contains(markerIndex)) {
+      return Colors.redAccent;
+    }
+
+    return Colors.green;
+  }
+
 
   void statusbarCallback(String event) {
     debugPrint("statusbarCall $event");
@@ -162,6 +215,12 @@ class MapTrackState extends State<MapTrack> {
       break;
 
       case "info" :
+      break;
+
+      case "edit" :
+      setState(() {
+        _edit = !_edit;
+      });
       break;
     }
   }
@@ -235,10 +294,15 @@ class MapTrackState extends State<MapTrack> {
         point: trackService.trackLatLngs.first,
         builder: (ctx) =>
           Container(
-            child: Icon(
-              Icons.pin_drop,
-              color: Colors.green,
-            ),
+            child: GestureDetector(
+              onTap: () {
+                _handleTapOnMarker(trackService.trackLatLngs.first, 0);
+              },
+              child: Icon(
+                Icons.pin_drop,
+                color: _getMarkerIconColor(0),
+              ),
+            )
           )
         );
         ml.add(newMarker);

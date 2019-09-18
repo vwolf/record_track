@@ -20,13 +20,13 @@ class Track {
   String location;
   String tourImage;
   String options;
-  String coords;
+  String coords; // start coords
   String track;
   String items;
   String createdAt;
   // not saved to db
   String offlineMapPath;
-  String gpxFilePath;
+  String gpxFilePath; // path to *.gpx file
 
   Track({
     this.id,
