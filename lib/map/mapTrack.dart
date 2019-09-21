@@ -12,6 +12,7 @@ import '../track/trackService.dart';
 import 'mapScale/scaleLayerPluginOptions.dart';
 import 'mapStatusBar/statusbarPluginOptions.dart';
 import 'mapMarkerDraggable/markerDraggableOptions.dart';
+import 'mapInfoElement/infoModal.dart';
 
 //import 'package:flutter_map/src/geo/crs/crs.dart';
 
@@ -66,6 +67,14 @@ class MapTrackState extends State<MapTrack> {
   // track modified - save or reload?
   bool trackModFlag = false;
 
+  InfoModal _infoModal = InfoModal(
+      point: LatLng(0.0, 0.0),
+      color: Colors.blue.withOpacity(0.8),
+      borderStrokeWidth: 1.0,
+      // useRadiusInMeter: true,
+      size: Size(100.0, 50.0),
+  );
+
   @override 
   void dispose() {
     if (streamController != null) {
@@ -99,6 +108,7 @@ class MapTrackState extends State<MapTrack> {
             ScaleLayerPlugin(),
             StatusbarPlugin(),
             MarkerDraggablePlugin(),
+            _infoModal,
           ],
         ),
         
@@ -125,6 +135,9 @@ class MapTrackState extends State<MapTrack> {
             ],
             onTap: (Polyline polyline, LatLng latlng, int polylineIdx) => _onTap("track", polyline, latlng, polylineIdx),
             
+          ),
+          InfoModalLayerOptions(
+            infoElements: infoModal
           ),
           StatusbarLayerPluginOption(
             eventCallback: statusbarCallback,
@@ -540,5 +553,22 @@ class MapTrackState extends State<MapTrack> {
   }
 
   _dragEnd(LatLng position) {}
+
+
+  List<InfoModal> get infoModal => makeInfoModal();
+
+  List<InfoModal> makeInfoModal() {
+    var infoModal = <InfoModal>[
+      InfoModal(
+        point: LatLng(53.0, 13.0),
+        color: Colors.white.withOpacity(0.8),
+        borderStrokeWidth: 1.0,
+        size: Size(200.0, 50.0),
+        infoText: "infoText"
+      )
+    ];
+    return infoModal;
+  }
+
 
 }
