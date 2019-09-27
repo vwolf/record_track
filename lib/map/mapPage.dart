@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart';
 import '../track/trackService.dart';
 import 'mapTrack.dart';
 
+typedef TrackEvent = void Function(String event);
+
 /// Page with map. Display selected track on map
 /// [PersistentBottomSheet] for track marker infos
 /// [Overlay] for track marker images fullscreen
@@ -38,6 +40,8 @@ class MapPageState extends State<MapPage> {
   int openWayPoint;
   List<FileImage> images = [];
   OverlayEntry _imageOverlay;
+
+  TrackEvent trackEvent;
 
   void initState() {
     super.initState();
@@ -70,8 +74,27 @@ class MapPageState extends State<MapPage> {
   /// [trackingPageStreamMsg]
   onMapEvent(TrackPageStreamMsg trackingPageStreamMsg) {
     print("TrackingPage.onMapEvent ${trackingPageStreamMsg.type}");
+    if (trackingPageStreamMsg.type == "pathOptions") {
+      if (trackingPageStreamMsg.msg == "edit") {
+        openPathEditOptionsSheet();
+      }
+    
+    }
   }
 
+  void trackEventCall(String event) {
+    print("MapPage.trackEventCall $event");
+    _streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
+    
+    if (event == "redo-deletePoint") {
+      print (_mapTrack.trackService.trackRollbackObjs.length);
+    }
+    
+      if (_persistentBottomSheetController != null ) {
+        _persistentBottomSheetController.setState(() {});       
+      }
+    
+  }
 
   /// Show a [PersistentBottomSheet]
   /// First close open [PersistentBottomSheet]
@@ -94,6 +117,78 @@ class MapPageState extends State<MapPage> {
       _persistentBottomSheetController = null;
     }
   }
+
+ 
+  /// Show [PersistentBottomSheet]
+  openPathEditOptionsSheet() async {
+    if (_persistentBottomSheetController == null) {
+      _persistentBottomSheetController = 
+        _scaffoldKey.currentState.showBottomSheet((BuildContext context) {
+            return _editOptionSheet;
+          
+      });
+    } else {
+      _persistentBottomSheetController.close();
+      await _persistentBottomSheetController.closed;
+      _persistentBottomSheetController = null;
+    }
+  }
+
+  
+  /// [BottomSheet] content
+  /// 
+  Widget get _editOptionSheet {
+    
+    return StatefulBuilder(
+      
+      builder: (BuildContext context, setState) {
+        return Container(
+          //color: c,
+          child: ButtonBar(
+            alignment: MainAxisAlignment.start,
+            children: <Widget>[
+              IconButton(
+              icon: Icon(Icons.remove_circle),
+              tooltip: "Remove path segment",
+              onPressed: () {
+                _mapTrack.trackService.deletePointInTrack(trackEventCall);
+                //_streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
+              },
+            ),
+            Text("Remove"),
+            IconButton(
+              icon: Icon(Icons.add_circle,),
+            
+              onPressed: () {
+                _mapTrack.trackService.insertPointInTrack(trackEventCall);
+                _streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
+              },
+            ),
+            Text("Add"),
+            _mapTrack.trackService.trackRollbackObjs.length > 0 ? _reverseButton : Container(height: 0,), 
+            ],
+            
+          )
+        );
+      }
+    );
+    
+  }
+
+
+  /// Redo button 
+  Widget get _reverseButton {
+    return IconButton(
+      icon: Icon(Icons.replay),
+      onPressed: () {
+        redoTrackEditAction(trackEventCall);
+      },);
+  }
+
+  redoTrackEditAction(trackEventCall) {
+    _mapTrack.trackService.redoTrackEditAction(trackEventCall);
+  }
+
 
   /// Bottomsheet content for track info
   /// ToDo Needs some style and more possible content (profile height?)
@@ -121,18 +216,29 @@ class MapPageState extends State<MapPage> {
   }
 
 
-  Future<bool> _requestPop() {
+  Future<bool> _requestPop() async {
     print("_requestPop()");
-    if (_imageOverlay == null) {
+    // if (_imageOverlay == null) {
+    //   Navigator.of(context).pop();
+    //   return Future.value(false);
+    // } 
 
-      Navigator.of(context).pop();
-      return Future.value(false);
-
-    } else {
+    if (_imageOverlay != null) {
       _imageOverlay.remove();
       _imageOverlay = null;
       return Future.value(false);
     }
+
+    if ( _persistentBottomSheetController != null ) {
+      _persistentBottomSheetController.close();
+      await _persistentBottomSheetController.closed;
+      _persistentBottomSheetController = null;
+      
+      return Future.value(false);
+    }
+
+    Navigator.of(context).pop();
+    return Future.value(false);
   }
 
 

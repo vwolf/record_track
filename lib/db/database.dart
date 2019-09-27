@@ -94,7 +94,7 @@ class DBProvider {
   }
 
   /// TrackCoord Table queries
-  addTrackCoord(TrackCoord trackCoord, String trackCoordTable) async {
+  Future<int> addTrackCoord(TrackCoord trackCoord, String trackCoordTable) async {
     final db = await database;
     return _trackCoordTable.addTrackCoord(db, trackCoord, trackCoordTable);
   }
@@ -104,13 +104,23 @@ class DBProvider {
     return _trackCoordTable.getTrackCoords(db, trackCoordTable);
   }
 
-  updateTrackCoord(int id, String trackCoordTable, String prop, dynamic val) async {
+  Future<int> updateTrackCoord(int id, String trackCoordTable, String prop, dynamic val) async {
     final db = await database;
     return _trackCoordTable.updateTrackCoord(db, trackCoordTable, id, prop, val);
   }
 
-  replaceTrackCoord(String tableName, TrackCoord trackCoord) async {
+  Future<int> replaceTrackCoord(String tableName, TrackCoord trackCoord) async {
     final db = await database;
     return _trackCoordTable.replaceTrackCoord(db, tableName, trackCoord);
+  }
+
+  insertTrackCoord(TrackCoord trackCoord, String trackCoordTable, int index) async {
+    final db = await database;
+    return _trackCoordTable.insertTrackCoord(db, trackCoord, trackCoordTable, index);
+  }
+
+  deleteTrackCoord(int id, String trackCoordTable) async {
+    final db = await database;
+    return _trackCoordTable.deleteTrackCoord(db, trackCoordTable, id);
   }
 }

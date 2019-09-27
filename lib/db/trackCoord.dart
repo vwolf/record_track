@@ -61,7 +61,7 @@ class TrackCoordTable {
   /// TourCoords functions
   ///
 
-  addTrackCoord(Database db, TrackCoord trackCoord, String trackCoordTable) async {
+  Future<int> addTrackCoord(Database db, TrackCoord trackCoord, String trackCoordTable) async {
     print("db addTrackCoords");
     String query = "SELECT MAX(id)+1 as id FROM " + trackCoordTable;
     var table = await db.rawQuery(query);
@@ -126,6 +126,7 @@ class TrackCoordTable {
       print("deleteTrackCoord res: $res");
       String query = "UPDATE $trackCoordTable SET id = id - 1 WHERE id > $id";
       await db.rawUpdate(query);
+      return res;
     } on DatabaseException catch (e) {
       print("sqlite error: $e");
     }
@@ -133,19 +134,21 @@ class TrackCoordTable {
 
   /// Update one value in trackCoords table
   /// #Set or remove id of item
-  updateTrackCoord(Database db, String tableName, int id, String prop, dynamic val) async {
+  Future<int> updateTrackCoord(Database db, String tableName, int id, String prop, dynamic val) async {
     String query = "UPDATE $tableName SET $prop = $val WHERE id = $id";
     try {
       var res = await db.rawUpdate(query);
       print ("updateTrackCoord $res");
+      return res;
     } on DatabaseException catch (e) {
       print ("DatabaseException $e");
     }
+    return 0;
   }
 
   /// Replace [TrackCoord] with id in db
   /// 
-  replaceTrackCoord(Database db, String tableName, TrackCoord trackCoord) async {
+  Future<int> replaceTrackCoord(Database db, String tableName, TrackCoord trackCoord) async {
     try {
       await db.update("$tableName", trackCoord.toMap(), where: "id = ?", whereArgs: [trackCoord.id]);
       return 1;

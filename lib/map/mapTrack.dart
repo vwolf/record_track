@@ -23,6 +23,11 @@ typedef StatusbarEvent = void Function(String event);
 /// Own position: switch in [MapStatusLayer] and receive message via [StatusbarEvent]
 /// In [switchGeolocation] subscribe to [GeoLocationService]
 ///
+/// User Action on map
+/// - select start or end point
+/// - move start and end point
+/// - select track segment
+/// - 
 class MapTrack extends StatefulWidget {
   final StreamController<TrackPageStreamMsg> streamController;
   final TrackService trackService;
@@ -38,7 +43,7 @@ class MapTrack extends StatefulWidget {
 class MapTrackState extends State<MapTrack> {
 
   TrackService trackService;
-  StreamController streamController;
+  StreamController<TrackPageStreamMsg> streamController = StreamController.broadcast();
   MapTrackState(this.trackService, this.streamController);
 
   MapController _mapController = MapController();
@@ -48,7 +53,7 @@ class MapTrackState extends State<MapTrack> {
   LatLng get startPos => widget.trackService.getTrackStart();
 
   List<int> _activeMarker = [];
-  List<int> _editMarker = [];
+  //List<int> _editMarker = [];
   List<LatLng> editMarkerLatLng = [];
 
   // status values
@@ -59,7 +64,7 @@ class MapTrackState extends State<MapTrack> {
   LatLng _currentPosition;
 
   Key _mapOptionKey = new Key("mapOptionkey");
-  ObjectKey _objectKey = new ObjectKey("objectKey");
+  //ObjectKey _objectKey = new ObjectKey("objectKey");
   //LocalKey _localKey = LocalKey();
 
   /// This is the callback for the statusbar
@@ -74,6 +79,16 @@ class MapTrackState extends State<MapTrack> {
       // useRadiusInMeter: true,
       size: Size(100.0, 50.0),
   );
+  LatLng _infoModalPosition;
+
+  /// For persistent bottomsheet
+  //final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  //PersistentBottomSheetController _persistentBottomSheetController;
+
+  void initState() {
+    super.initState();
+    initStreamController();
+  }
 
   @override 
   void dispose() {
@@ -89,9 +104,31 @@ class MapTrackState extends State<MapTrack> {
     super.dispose();
   }
 
+  initStreamController() {
+    streamController.stream.listen((TrackPageStreamMsg mapPageStreamMsg) {
+      onMapPageEvent(mapPageStreamMsg);
+    }, onDone: () {
+      print("MapTrack TrackPageStreamMsg Done");
+    }, onError: (e) {
+      print('MapTrack StreamController error $e');
+    });
+  }
+
+  onMapPageEvent(TrackPageStreamMsg trackPageStreamMsg) {
+    print("MapTrack.onMapPageEvent ${trackPageStreamMsg.type}");
+    switch (trackPageStreamMsg.type) {
+      case "updateTrack": 
+      setState(() {
+        
+      });
+    }
+  }
+
+
   @override 
   Widget build(BuildContext context) {
     return Flexible(
+      
       child: FlutterMap(
         mapController: _mapController,
         key: _mapOptionKey,
@@ -136,9 +173,7 @@ class MapTrackState extends State<MapTrack> {
             onTap: (Polyline polyline, LatLng latlng, int polylineIdx) => _onTap("track", polyline, latlng, polylineIdx),
             
           ),
-          InfoModalLayerOptions(
-            infoElements: infoModal
-          ),
+          
           StatusbarLayerPluginOption(
             eventCallback: statusbarCallback,
             offlineMode: _offline,
@@ -161,6 +196,11 @@ class MapTrackState extends State<MapTrack> {
           MarkerDraggableLayerPluginOptions(
             markers: draggableMarker,
           ),
+          /// InfoModalLayer is blocking Statusbar, sort layer in some way
+          /// InfoModalLayer should be on top of track and marker layers
+          InfoModalLayerOptions(
+            infoElements: infoModal
+          ),
         ], 
       ),
     );
@@ -171,13 +211,34 @@ class MapTrackState extends State<MapTrack> {
   /// 
   /// Edit mode: 
   /// - on tap add to new point to track
-  /// - 
+  /// - [trackService.selectedTrackPoints] length > 0 then deselect track points
+  /// 
   void _handleTap(LatLng latlng) async {
     print("mapTrack._handleTap ");
-    if (_edit && _activeMarker.length == 0) {
-      trackService.addPointToTrack(latlng);
+    if (_edit && _activeMarker.length == 1) {
+      if ( _activeMarker[0] == trackService.trackLatLngs.length - 1 ) {
+        await trackService.addPointToTrack(latlng).whenComplete(() {
+          setState(() {
+            _activeMarker[0] += 1;
+          });
+          return;
+        });
+        
+        //return;
+      }
+    }
+
+    /// 
+    if (_edit && trackService.selectedTrackPoints != null) {
+      trackService.selectedTrackPoints = null;
       setState(() {
         
+      });
+    }
+
+    if (_infoModalPosition != null) {
+      setState(() {
+         _infoModalPosition = LatLng(0.0, 0.0);
       });
     }
   }
@@ -191,12 +252,14 @@ class MapTrackState extends State<MapTrack> {
     if (_activeMarker.contains(index)) {
       _activeMarker.remove(index);
     } else {
+      _activeMarker = [];
       _activeMarker.add(index);
+      if (trackService.selectedTrackPoints != null) {
+        trackService.selectedTrackPoints = null;
+      }
     }
 
-    setState(() {
-        
-      });
+    setState(() {});
   }
 
   /// Long tap on map
@@ -227,27 +290,59 @@ class MapTrackState extends State<MapTrack> {
       }
     }
 
-    if (_editMarker.length == 2) {
-
+    if ( trackService.selectedTrackPoints != null && trackService.selectedTrackPoints.length == 2 ) {
+      /// Here we open a Modal, BottomSheet, Snackbar... ?
+      /// Send message to page to show a [PersistentBottomSheet].
+      /// 
+      print("LatLng at _handleLongPress ${latlng.latitude}, ${latlng.longitude}");
+      streamController.add(TrackPageStreamMsg("pathOptions", "edit"));
+      
+      // setState(() {
+      //   _infoModalPosition = latlng;
+      // });
     }
     
   }
 
-  /// Tap on polyline segment in map
-  /// type = "track"
+  /// Edit mode: 
+  /// Tap on polyline segment in map will 
+  /// add select start and end point of [Track] segment.
+  /// Deselect any selected marker.
+  /// 
+  /// Info mode: 
+  /// Tap on polyline segment in map will 
+  /// select nearest track point and show info modal for point.
+  /// 
+  /// to [trackService.selectedTrackPoints]. 
+  /// @param type [String] = track - tap on polyline
+  /// @param polyline [Polyline]
+  /// @param latlng [LatLng]
+  /// @param polylineIdx [int]  
   /// 
   _onTap(type, polyline, latlng, polylineIdx) {
     print("_onTap on $type at segment $polylineIdx");
+    if (_edit == false) {
+      setState(() {
+        trackService.selectedTrackPoints = [polylineIdx];
+        _infoModalPosition = latlng;
+      });
+      return; 
+    }
+
     // start and end point of segment
     if (trackService.trackLatLngs.length > polylineIdx) {
 
       LatLng segmentStart = trackService.trackLatLngs[polylineIdx];
       LatLng segmentEnd = trackService.trackLatLngs[polylineIdx + 1];
-      print("segmentStart at ${segmentStart.latitude}, ${segmentStart.longitude}");
-      print("segmentEnd at ${segmentEnd.latitude}, ${segmentEnd.longitude}");
+      print("segmentStart at ${segmentStart.latitude.toStringAsFixed(4)}, ${segmentStart.longitude.toStringAsFixed(4)}");
+      print("segmentEnd at ${segmentEnd.latitude.toStringAsFixed(4)}, ${segmentEnd.longitude.toStringAsFixed(4)}");
       
+      if (_activeMarker.length > 0) {
+        _activeMarker = [];
+      }
       setState(() {
-        _editMarker = [polylineIdx, (polylineIdx + 1)];
+       // _editMarker = [polylineIdx, (polylineIdx + 1)];
+        trackService.selectedTrackPoints = [polylineIdx, (polylineIdx + 1)];
         editMarkerLatLng = [segmentStart, segmentEnd];
       });
     } else {
@@ -303,6 +398,8 @@ class MapTrackState extends State<MapTrack> {
       case "edit" :
       setState(() {
         _edit = !_edit;
+        trackService.selectedTrackPoints = null;
+        _activeMarker = [];
       });
       break;
     }
@@ -382,9 +479,9 @@ class MapTrackState extends State<MapTrack> {
                 _handleTapOnMarker(trackService.trackLatLngs.first, 0);
               },
               child: Icon(
-                Icons.pin_drop,
+                Icons.fiber_manual_record,
                 color: _getMarkerIconColor(0),
-                size: 30.0,
+                size: 18.0,
               ),
             )
           )
@@ -402,8 +499,9 @@ class MapTrackState extends State<MapTrack> {
                 _handleTapOnMarker(trackService.trackLatLngs.last, trackService.trackLatLngs.length - 1);
               },
               child: Icon(
-                Icons.pin_drop,
+                Icons.fiber_manual_record,
                 color: _getMarkerIconColor(trackService.trackLatLngs.length -1),
+                size: 18.0,
               ),
             )
           )
@@ -480,21 +578,21 @@ class MapTrackState extends State<MapTrack> {
   List<MarkerDraggable> get draggableMarker => makeDraggableMarker();
   List<MarkerDraggable> makeDraggableMarker() {
     List<MarkerDraggable> ml = [];
-      if (_editMarker.length > 0) {
-        for (int i = 0; i < _editMarker.length; i++) {
+      if (trackService.selectedTrackPoints != null) {
+        for (int i = 0; i < trackService.selectedTrackPoints.length; i++) {
           MarkerDraggable newMarker = MarkerDraggable(
             width: 30.0,
             height: 30.0,
-            point: trackService.trackLatLngs[_editMarker[i]],
+            point: trackService.trackLatLngs[trackService.selectedTrackPoints[i]],
             builder: (ctx) => 
               Container(
                 child: GestureDetector(
                   child: Draggable(
                     data: "dragData",
                     child: Icon(
-                      Icons.donut_large,
-                      color: Colors.redAccent,
-                      size: 30.0,
+                      Icons.fiber_manual_record,
+                      color: Colors.deepOrange,
+                      size: 24.0,
                     ),
                     feedback: Icon(
                       Icons.donut_large,
@@ -516,14 +614,14 @@ class MapTrackState extends State<MapTrack> {
 
   
 
-  _dragStarted(int index) {}
+  //_dragStarted(int index) {}
+  //_dragComplete() {}
 
-  _dragComplete() {}
-
+  /// DragCancel to react on drag end, there is no drag target
   /// [Offset] [off.dx] and [off.dy] needs to be an offset.
   /// Offset value? This is the result of some test.
   ///  
-  _dragCanceled(Velocity vel, Offset off, int index) {
+  _dragCanceled(Velocity vel, Offset off, int index) async {
     print("_dragCanceled ${off.distance}");
     
     var renderObject = context.findRenderObject() as RenderBox;
@@ -536,33 +634,39 @@ class MapTrackState extends State<MapTrack> {
       CustomPoint((width / 2) - localPoint.x, (height / 2) - localPoint.y);
     // get map center
     LatLng mapCenterLatLng = _mapController.center;
-    
-    // var mapCenter = CrsSimple().latLngToPoint(mapCenterLatLng, _mapController.zoom);
     var mapCenter = Epsg3857().latLngToPoint(mapCenterLatLng, _mapController.zoom);
+    
     var point = mapCenter - localPointCenterDistance;
-
     var finalPos = Epsg3857().pointToLatLng(point, _mapController.zoom);
 
-    int posIndex = _editMarker[index];
-   
-    trackService.trackLatLngs[posIndex].latitude = finalPos.latitude;
-    trackService.trackLatLngs[posIndex].longitude = finalPos.longitude;
-    setState(() {
- 
+    int posIndex = trackService.selectedTrackPoints[index];
+    
+    await trackService.changeTrackPointCoord(posIndex, finalPos).then((r) {
+      print("changeTrackPointCoord with $r");
+      if (r == 0) {
+        // error saving new trackpoint coords
+        print("Error saving changed track point!");
+      } else {
+        setState(() {});
+      }
     });
+
+    
   }
 
-  _dragEnd(LatLng position) {}
+  //_dragEnd(LatLng position) {}
 
 
   List<InfoModal> get infoModal => makeInfoModal();
 
   List<InfoModal> makeInfoModal() {
+
     var infoModal = <InfoModal>[
       InfoModal(
-        point: LatLng(53.0, 13.0),
+        point: _infoModalPosition != null ? _infoModalPosition : LatLng(0.0, 0.0),
         color: Colors.white.withOpacity(0.8),
         borderStrokeWidth: 1.0,
+        borderColor: Colors.black,
         size: Size(200.0, 50.0),
         infoText: "infoText"
       )
@@ -570,5 +674,21 @@ class MapTrackState extends State<MapTrack> {
     return infoModal;
   }
 
+  // openPersistenBottomSheet() async {
+  //   if (_persistentBottomSheetController == null) {
+  //     Scaffold cState = context.ancestorWidgetOfExactType(Scaffold);
+  //     _persistentBottomSheetController = 
+  //       cState.{
+  //         return _pathOptionSheet;
+  //       });
+  //   } else {
+  //     _persistentBottomSheetController.close();
+  //     await _persistentBottomSheetController.closed;
+  //     _persistentBottomSheetController = null;
+  //   }
+  // }
 
+  // Widget get _pathOptionSheet {
+  //   return Container();
+  // }
 }

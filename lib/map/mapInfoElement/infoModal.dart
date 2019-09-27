@@ -39,10 +39,12 @@ class InfoModal implements MapPlugin {
   });
 
   @override 
-  Widget createLayer(LayerOptions options, MapState state, Stream<Null> stream) {
+  Widget createLayer(
+    LayerOptions options, MapState state, Stream<Null> stream) {
     if (options is InfoModalLayerOptions) {
       return InfoModalLayer(options, state, stream);
     }
+    throw Exception('Unkown options type for StatusbarLayerPlugin: $options');
   }
 
   @override 
@@ -63,7 +65,8 @@ class InfoModalLayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints bc) {
-        final size = Size(bc.maxWidth, bc.maxWidth);
+        final size = Size(bc.maxWidth, bc.maxHeight);
+        //final size = Size(200.0, 50.0);
         return _build(context, size);
       },
     );

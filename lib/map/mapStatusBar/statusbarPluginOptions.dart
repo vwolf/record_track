@@ -9,7 +9,11 @@ class StatusbarLayerPluginOption extends LayerOptions {
   bool location;
   bool edit;
 
-  StatusbarLayerPluginOption( {this.eventCallback, this.offlineMode, this.location, this.edit } );
+  StatusbarLayerPluginOption({
+    this.eventCallback, 
+    this.offlineMode, 
+    this.location, 
+    this.edit });
 }
 
 
