@@ -78,7 +78,10 @@ class MapPageState extends State<MapPage> {
       if (trackingPageStreamMsg.msg == "edit") {
         openPathEditOptionsSheet();
       }
-    
+    }
+
+    if (trackingPageStreamMsg.type == "infoBottomSheet") {
+      openPersistentBottomSheet();
     }
   }
 
@@ -194,7 +197,10 @@ class MapPageState extends State<MapPage> {
   /// ToDo Needs some style and more possible content (profile height?)
   ///
   Widget get _trackInfoSheet {
-    return Container();
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.33,
+      color: Colors.blueGrey,
+    );
   }
 
   /// Use [WillPopScope] to close [OverlayEntry] [imageOverlay]
@@ -210,12 +216,18 @@ class MapPageState extends State<MapPage> {
         ),
         body: Column(children: <Widget>[
           _mapTrack,
+          //_info,
         ],),
       ),
     );
   }
 
-
+  Widget get _info {
+    return Container(
+      height: 50.0,
+      width: 50.0,
+    );
+  }
   Future<bool> _requestPop() async {
     print("_requestPop()");
     // if (_imageOverlay == null) {

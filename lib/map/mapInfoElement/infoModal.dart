@@ -27,6 +27,7 @@ class InfoModal implements MapPlugin {
   final String infoText;
 
   Offset offset = Offset.zero;
+  CustomPoint tapPosition; 
   num realRadius = 0;
 
   InfoModal({
@@ -63,6 +64,16 @@ class InfoModalLayer extends StatelessWidget {
 
   @override 
   Widget build(BuildContext context) {
+    // return SizedBox(
+    //   height: 200,
+    //   width: 200,
+    //   child: LayoutBuilder(
+    //     builder: (BuildContext context, BoxConstraints bc) {
+    //       final size = Size(bc.maxWidth, bc.maxHeight-80);
+    //       return _build(context, size);
+    //     },
+    //   ),
+    // );
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints bc) {
         final size = Size(bc.maxWidth, bc.maxHeight);
@@ -81,7 +92,9 @@ class InfoModalLayer extends StatelessWidget {
           var pos = mapState.project(mapInfoElement.point);
           pos = pos.multiplyBy(mapState.getZoomScale(mapState.zoom, mapState.zoom)) -
             mapState.getPixelOrigin();
-          mapInfoElement.offset = Offset(pos.x.toDouble(), pos.y.toDouble());
+          mapInfoElement.tapPosition = pos;
+          //mapInfoElement.offset = Offset(pos.x.toDouble(), pos.y.toDouble());
+          mapInfoElement.offset = getInfoElementOffset(pos, size, mapInfoElement.size);
 
           mapInfoWidgets.add(
             CustomPaint(
@@ -93,11 +106,23 @@ class InfoModalLayer extends StatelessWidget {
 
         return Container(
           child: Stack(
+            
             children: mapInfoWidgets,
           ),
         );
       }
     );
+  }
+
+  /// - @param pos : tap position on layer
+  /// - @param layerSize : size of layer
+  /// - @param size : size of infoModal
+  Offset getInfoElementOffset(CustomPoint pos, Size layerSize, Size size) {
+    if (pos.x > layerSize.width / 2) {
+      return Offset((pos.x - size.width).toDouble(), pos.y.toDouble());
+    }
+
+    return Offset(pos.x.toDouble(), pos.y.toDouble());
   }
 }
 
@@ -110,7 +135,8 @@ class InfoModalPainter extends CustomPainter {
 
   @override 
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
+    // final rect = Offset.zero & size;
+    final rect = Offset(0.0, 0.0) & size;
     canvas.clipRect(rect);
 
     final paint = Paint()
@@ -129,7 +155,15 @@ class InfoModalPainter extends CustomPainter {
     }
 
     paint.color = Colors.red;
-    _paintCircle(canvas, mapInfoElement.offset, 4.0, paint);
+    Offset circleOffset = Offset.zero;
+    if (mapInfoElement.offset.dx < mapInfoElement.tapPosition.x) {
+      circleOffset = Offset(mapInfoElement.offset.dx + mapInfoElement.size.width, mapInfoElement.offset.dy );
+    } else {
+      circleOffset = mapInfoElement.offset;
+    }
+
+
+    _paintCircle(canvas, circleOffset, 4.0, paint);
 
     _paintText(canvas, mapInfoElement.offset, mapInfoElement.infoText);
   }

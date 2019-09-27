@@ -109,6 +109,8 @@ class StatusbarLayer extends StatelessWidget {
   }
 
   statusBarEvent(String event) {
+    print("statusBarEvent $event");
+  
     statusbarLayerOpts.eventCallback(event);
   }
 }

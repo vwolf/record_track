@@ -174,18 +174,34 @@ class MapTrackState extends State<MapTrack> {
             
           ),
           
+          MarkerLayerOptions(
+            markers: gpsPositionList 
+          ),
+
+          MarkerLayerOptions(
+            markers: trackStartEndMarker
+          ),
+
+           MarkerDraggableLayerPluginOptions(
+            markers: draggableMarker,
+          ),
+
+          InfoModalLayerOptions(
+            infoElements: infoModal
+          ),
+
           StatusbarLayerPluginOption(
             eventCallback: statusbarCallback,
             offlineMode: _offline,
             location: _location,
             edit: _edit,
           ),
-          MarkerLayerOptions(
-            markers: gpsPositionList 
-          ),
-          MarkerLayerOptions(
-            markers: trackStartEndMarker
-          ),
+          // MarkerLayerOptions(
+          //   markers: gpsPositionList 
+          // ),
+          // MarkerLayerOptions(
+          //   markers: trackStartEndMarker
+          // ),
           // MarkerLayerOptions(
           //   //markers: editMarker
           //   markers: moveMarker
@@ -193,14 +209,14 @@ class MapTrackState extends State<MapTrack> {
           /// Here we use a extra layer for draggable points
           /// Works also with normal [Marker] layer.
           /// 
-          MarkerDraggableLayerPluginOptions(
-            markers: draggableMarker,
-          ),
+          // MarkerDraggableLayerPluginOptions(
+          //   markers: draggableMarker,
+          // ),
           /// InfoModalLayer is blocking Statusbar, sort layer in some way
           /// InfoModalLayer should be on top of track and marker layers
-          InfoModalLayerOptions(
-            infoElements: infoModal
-          ),
+          // InfoModalLayerOptions(
+          //   infoElements: infoModal
+          // ),
         ], 
       ),
     );
@@ -393,6 +409,7 @@ class MapTrackState extends State<MapTrack> {
       break;
 
       case "info" :
+      streamController.add(TrackPageStreamMsg("infoBottomSheet", "open"));
       break;
 
       case "edit" :
