@@ -114,6 +114,10 @@ class MapTrackState extends State<MapTrack> {
     });
   }
 
+  /// Touch events from map (status layer or marker).
+  /// Registered at initStreamController
+  /// 
+  /// [TrackPageStreamMsg] trackPageStreamMsg
   onMapPageEvent(TrackPageStreamMsg trackPageStreamMsg) {
     print("MapTrack.onMapPageEvent ${trackPageStreamMsg.type}");
     switch (trackPageStreamMsg.type) {
@@ -379,7 +383,13 @@ class MapTrackState extends State<MapTrack> {
     return Colors.green;
   }
 
-
+  /// Event msg from [StatusbarLayer].
+  /// 
+  /// - zoom_in, zoom_out: 
+  /// - location_on: toogle gps tracking mode [_location] in switchLocation
+  /// - offline_mode: 
+  /// - info : stream msg to [MapPage]. 
+  /// - edit: toogle track edit mode
   void statusbarCallback(String event) {
     debugPrint("statusbarCall $event");
 

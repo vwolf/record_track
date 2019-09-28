@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:record_track/map/mapScale/scalebar_utils.dart';
 import 'package:sqflite/sqlite_api.dart';
 import 'package:vector_math/vector_math.dart';
@@ -37,6 +38,9 @@ class TrackService {
 
   List<TrackRollbackObj> trackRollbackObjs = [];
 
+  /// Track info
+  double trackDistance = 0.0;
+
   /// Fill or update [Track] object to be used by [MapTrack].
   /// 
   Future<void> getTrack() async {
@@ -49,6 +53,9 @@ class TrackService {
       trackCoords = convertToTrackCoord( gpxFileData.gpxCoords);
       trackLatLngs = gpxFileData.gpxLatLng;
       }).whenComplete(() {
+        getTrackDistance().then((r) {
+          trackDistance = r;
+        });
         return true;
       });
     } else {
@@ -60,6 +67,9 @@ class TrackService {
           track.coords = GeoLocationService.gls.latlngToJson(trackLatLngs.first);
         }
       }).whenComplete(() {
+        getTrackDistance().then((r) {
+          trackDistance = r;
+        });
         return true;
       });
     }
@@ -316,6 +326,25 @@ class TrackService {
         break;
       }
     }
+  }
+
+  /// Track info's
+  /// 
+  
+  /// Return length of track
+  /// 
+  Future<double> getTrackDistance() async {
+    //double totalDistance = 0;
+    double totalDistanceGeo = 0;
+    for (var i = 0; i < trackLatLngs.length - 1; i++) {
+      totalDistanceGeo += await Geolocator().distanceBetween(
+        trackLatLngs[i].latitude, 
+        trackLatLngs[i].longitude, 
+        trackLatLngs[i + 1].latitude, 
+        trackLatLngs[i + 1].longitude); 
+    }
+
+    return totalDistanceGeo;
   }
 }
 

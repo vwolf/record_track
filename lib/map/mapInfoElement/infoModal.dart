@@ -179,15 +179,15 @@ class InfoModalPainter extends CustomPainter {
     canvas.drawRRect(rrect, paint);
   }
 
-void _paintParagraph(Canvas canvas, Offset offset, String text) {
-    ParagraphBuilder paragraphBuilder = ParagraphBuilder(ParagraphStyle(textAlign: TextAlign.left, textDirection: TextDirection.ltr))
-    ..addText(text);
+// void _paintParagraph(Canvas canvas, Offset offset, String text) {
+//     ParagraphBuilder paragraphBuilder = ParagraphBuilder(ParagraphStyle(textAlign: TextAlign.left, textDirection: TextDirection.ltr))
+//     ..addText(text);
 
-    Paragraph paragraph = paragraphBuilder.build();
-    paragraph.layout(ParagraphConstraints(width: 200.0));
-    //Offset nullOffset = Offset(0.0, 0.0);
-    canvas.drawParagraph(paragraph, offset);
-  }
+//     Paragraph paragraph = paragraphBuilder.build();
+//     paragraph.layout(ParagraphConstraints(width: 200.0));
+//     //Offset nullOffset = Offset(0.0, 0.0);
+//     canvas.drawParagraph(paragraph, offset);
+//   }
   
   void _paintText(Canvas canvas, Offset offset, String text) {
     final TextPainter textPainter = TextPainter(

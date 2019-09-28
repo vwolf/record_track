@@ -10,8 +10,14 @@ import 'mapTrack.dart';
 
 typedef TrackEvent = void Function(String event);
 
-/// Page with map. Display selected track on map
-/// [PersistentBottomSheet] for track marker infos
+/// Page with map. Display selected track on map.
+/// 
+/// [PersistentBottomSheet] for
+/// - track edit options
+/// - track marker info
+/// 
+/// [MapInfoElement] for track point info
+/// 
 /// [Overlay] for track marker images fullscreen
 class MapPage extends StatefulWidget {
 
@@ -46,7 +52,6 @@ class MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     initStreamController();
-
   }
 
   @override 
@@ -69,38 +74,43 @@ class MapPageState extends State<MapPage> {
     });
   }
 
-  /// Touch events from map (status layer or marker)
-  ///
+  /// Touch events from map (status layer or marker).
+  /// Registered at initStreamController
+  /// 
   /// [trackingPageStreamMsg]
-  onMapEvent(TrackPageStreamMsg trackingPageStreamMsg) {
+  bool onMapEvent(TrackPageStreamMsg trackingPageStreamMsg) {
     print("TrackingPage.onMapEvent ${trackingPageStreamMsg.type}");
     if (trackingPageStreamMsg.type == "pathOptions") {
       if (trackingPageStreamMsg.msg == "edit") {
         openPathEditOptionsSheet();
+        return true;
       }
     }
 
     if (trackingPageStreamMsg.type == "infoBottomSheet") {
       openPersistentBottomSheet();
+      return true;
     }
+
+    return false;
   }
 
+  /// Event notification used in [_trackEditOptionSheet] as Closure
+  /// [event]'s: insertPoint, deletePoint, 
+  /// redo-insertPoint,redo-addPoint, redo-deletePoint  
   void trackEventCall(String event) {
     print("MapPage.trackEventCall $event");
     _streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
     
-    if (event == "redo-deletePoint") {
-      print (_mapTrack.trackService.trackRollbackObjs.length);
+    // always update state of bottom sheet [_reverseButton] IconButton
+    if (_persistentBottomSheetController != null ) {
+      _persistentBottomSheetController.setState(() {});       
     }
-    
-      if (_persistentBottomSheetController != null ) {
-        _persistentBottomSheetController.setState(() {});       
-      }
     
   }
 
-  /// Show a [PersistentBottomSheet]
-  /// First close open [PersistentBottomSheet]
+  /// Show or remove [PersistentBottomSheet]
+  /// 
   /// Todo Sometimes error 'removeLocalHistoryEntry' was called on null.
   /// Todo [_persistentBottomSheetController] not null even bottomSheet is no visible?
   /// added async await [_persistentBottomSheetController].closed
@@ -122,12 +132,12 @@ class MapPageState extends State<MapPage> {
   }
 
  
-  /// Show [PersistentBottomSheet]
+  /// Show or remove [PersistentBottomSheet]
   openPathEditOptionsSheet() async {
     if (_persistentBottomSheetController == null) {
       _persistentBottomSheetController = 
         _scaffoldKey.currentState.showBottomSheet((BuildContext context) {
-            return _editOptionSheet;
+            return _trackEditOptionSheet;
           
       });
     } else {
@@ -138,9 +148,10 @@ class MapPageState extends State<MapPage> {
   }
 
   
-  /// [BottomSheet] content
+  /// [BottomSheet] content for track editing.
+  /// User Events are send to [TrackService].
   /// 
-  Widget get _editOptionSheet {
+  Widget get _trackEditOptionSheet {
     
     return StatefulBuilder(
       
@@ -164,7 +175,7 @@ class MapPageState extends State<MapPage> {
             
               onPressed: () {
                 _mapTrack.trackService.insertPointInTrack(trackEventCall);
-                _streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
+                //_streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
               },
             ),
             Text("Add"),
@@ -179,21 +190,22 @@ class MapPageState extends State<MapPage> {
   }
 
 
-  /// Redo button 
+  /// Redo button used in _trackEditOptionSheet
   Widget get _reverseButton {
     return IconButton(
       icon: Icon(Icons.replay),
       onPressed: () {
-        redoTrackEditAction(trackEventCall);
+        _mapTrack.trackService.redoTrackEditAction(trackEventCall);
       },);
   }
 
-  redoTrackEditAction(trackEventCall) {
-    _mapTrack.trackService.redoTrackEditAction(trackEventCall);
-  }
 
-
-  /// Bottomsheet content for track info
+  /// Bottomsheet content for track info.
+  /// Track infos are: 
+  /// - Total length of track
+  /// - Description of track (in gpx file)
+  /// - Distance from tapped point to start and end of track
+  /// 
   /// ToDo Needs some style and more possible content (profile height?)
   ///
   Widget get _trackInfoSheet {
@@ -216,18 +228,13 @@ class MapPageState extends State<MapPage> {
         ),
         body: Column(children: <Widget>[
           _mapTrack,
-          //_info,
         ],),
       ),
     );
   }
 
-  Widget get _info {
-    return Container(
-      height: 50.0,
-      width: 50.0,
-    );
-  }
+  
+
   Future<bool> _requestPop() async {
     print("_requestPop()");
     // if (_imageOverlay == null) {
