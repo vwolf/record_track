@@ -76,6 +76,39 @@ class TrackService {
     return false;
   }
 
+
+  Future saveEmptyTrack() async {
+    LatLng currentPosition = await GeoLocationService.gls.simpleLocation();
+
+    var name_ext = DateTime.now().toString();
+    // replace not allowed chars in table name
+    name_ext = name_ext.replaceAll(RegExp(r'[:\.\-]'), '_');
+    track.name = "track_$name_ext";
+    track.description = "tracking start";
+    track.location = "later";
+    track.timestamp = DateTime.now();
+    track.createdAt = DateTime.now().toIso8601String();
+    track.coords = GeoLocationService.gls.latlngToJson(currentPosition);
+    trackLatLngs = [];
+    trackLatLngs.add(currentPosition);
+    trackCoords = [];
+    TrackCoord newTrackCoord = TrackCoord(
+      latitude: currentPosition.latitude,
+      longitude: currentPosition.longitude,
+      timestamp: DateTime.now());
+
+    await DBProvider.db.newTrack(track);
+    trackCoords.add(newTrackCoord);
+
+    // placement infos for location name
+    GeoLocationService.gls.getCoordDescription(currentPosition).then((r) {
+      track.location = r;
+    });
+
+    return true;
+  }
+
+
   /// Track start in track from db is in [track.coords]
   /// Track start in track from parsed gpx file is first entry in [gpxFileData.gpxLatLng]
   /// 
@@ -160,6 +193,7 @@ class TrackService {
 
   /// Delete [TrackPoint] at [trackPointIndex].
   /// Delete the second point in [selectedTrackPoints].
+  /// Update track distance 
   /// 
   /// - First trackpoint: update start point
   deletePointInTrack( TrackEvent trackEvent) async {
@@ -185,6 +219,9 @@ class TrackService {
             selectedTrackPoints[0] = lastTrackPoint - 2;
             selectedTrackPoints[1] = lastTrackPoint - 1;
           }
+          getTrackDistance().then((r) {
+            trackDistance = r;
+          });
         }
         
         trackEvent("deletePoint");
@@ -331,7 +368,7 @@ class TrackService {
   /// Track info's
   /// 
   
-  /// Return length of track
+  /// Return length of track in meter
   /// 
   Future<double> getTrackDistance() async {
     //double totalDistance = 0;
@@ -343,8 +380,10 @@ class TrackService {
         trackLatLngs[i + 1].latitude, 
         trackLatLngs[i + 1].longitude); 
     }
-
-    return totalDistanceGeo;
+    
+    int distanceMeter = totalDistanceGeo.toInt();
+    double distanceKm = (distanceMeter / 1000);
+    return distanceKm;
   }
 }
 

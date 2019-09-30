@@ -17,3 +17,8 @@ New Track:
 
 Tracking: 
 - tracking active - save permanently
+
+Track edit
+- Add track point updates 
+
+- Delete track point: TrackService.deletePointInTrack()

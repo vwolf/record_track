@@ -61,6 +61,7 @@ class MapTrackState extends State<MapTrack> {
   bool _location = false;
   bool _edit = false;
 
+
   LatLng _currentPosition;
 
   Key _mapOptionKey = new Key("mapOptionkey");
@@ -186,9 +187,9 @@ class MapTrackState extends State<MapTrack> {
             markers: trackStartEndMarker
           ),
 
-           MarkerDraggableLayerPluginOptions(
-            markers: draggableMarker,
-          ),
+          // MarkerDraggableLayerPluginOptions(
+          //   markers: draggableMarker,
+          // ),
 
           InfoModalLayerOptions(
             infoElements: infoModal
@@ -213,9 +214,9 @@ class MapTrackState extends State<MapTrack> {
           /// Here we use a extra layer for draggable points
           /// Works also with normal [Marker] layer.
           /// 
-          // MarkerDraggableLayerPluginOptions(
-          //   markers: draggableMarker,
-          // ),
+          MarkerDraggableLayerPluginOptions(
+            markers: draggableMarker,
+          ),
           /// InfoModalLayer is blocking Statusbar, sort layer in some way
           /// InfoModalLayer should be on top of track and marker layers
           // InfoModalLayerOptions(
@@ -427,6 +428,10 @@ class MapTrackState extends State<MapTrack> {
         _edit = !_edit;
         trackService.selectedTrackPoints = null;
         _activeMarker = [];
+        if (!_edit) {
+          streamController.add(TrackPageStreamMsg("pathOptions", "close"));
+        }
+        
       });
       break;
     }

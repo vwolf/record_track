@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import 'package:record_track/tracking/trackingPage.dart';
 
 import '../track/newTrack.dart';
 import '../track/trackList.dart';
@@ -26,8 +27,13 @@ class SelectPage extends StatelessWidget {
 
   /// Start tracking now. 
   /// Create new track
-  void _startTrack() {
+  void _startTrack(BuildContext context) {
     debugPrint("startTrack");
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) {
+        return TrackingPage();
+      })
+    );
   }
 
   void _allTracks(BuildContext context) {
@@ -40,6 +46,7 @@ class SelectPage extends StatelessWidget {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
 
@@ -49,19 +56,19 @@ class SelectPage extends StatelessWidget {
       color: Colors.red,
       child: Column(
         mainAxisSize: MainAxisSize.max,
-         children: <Widget>[
-           Padding(
-             padding: EdgeInsets.only(top: 48.0), 
-             child: Divider(
-               color: Colors.white,
-             ),
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(top: 48.0), 
+              child: Divider(
+                color: Colors.white,
+              ),
             ),
-           IconButton(
-             icon: Icon(Icons.directions_walk, size: 52.0),
-             tooltip: "Start Track",
-             onPressed: () {
-               _startTrack();
-             },
+            IconButton(
+              icon: Icon(Icons.directions_walk, size: 52.0),
+              tooltip: "Start Track",
+              onPressed: () {
+                _startTrack(context);
+              },
             ),
             Padding(
               padding: EdgeInsets.only(top: 24.0),  

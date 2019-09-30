@@ -41,6 +41,8 @@ class MapPageState extends State<MapPage> {
   /// For persistent bottomsheet
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   PersistentBottomSheetController _persistentBottomSheetController;
+  /// which bottomSheet is open?
+  String bottomSheetType;
 
   /// for waypoints
   int openWayPoint;
@@ -85,10 +87,14 @@ class MapPageState extends State<MapPage> {
         openPathEditOptionsSheet();
         return true;
       }
+      if (trackingPageStreamMsg.msg == "close") {
+        openPathEditOptionsSheet(state: false);
+        return true;
+      }
     }
 
     if (trackingPageStreamMsg.type == "infoBottomSheet") {
-      openPersistentBottomSheet();
+      openInfoBottomSheet();
       return true;
     }
 
@@ -109,41 +115,50 @@ class MapPageState extends State<MapPage> {
     
   }
 
-  /// Show or remove [PersistentBottomSheet]
+  /// Show or remove [PersistentBottomSheet] with track infos.
+  /// [_trackInfoSheet] and [_trackOptionEditSheet] using same [PersistenBottomSheetController].
   /// 
   /// Todo Sometimes error 'removeLocalHistoryEntry' was called on null.
   /// Todo [_persistentBottomSheetController] not null even bottomSheet is no visible?
   /// added async await [_persistentBottomSheetController].closed
-  openPersistentBottomSheet() async {
+  openInfoBottomSheet() async {
     if (_persistentBottomSheetController == null ) {
-      setState(() {
-        getDistance();
-      });
       _persistentBottomSheetController =
-          _scaffoldKey.currentState.showBottomSheet((BuildContext context) {
-            return _trackInfoSheet;
-          });
-
+        _scaffoldKey.currentState.showBottomSheet((BuildContext context) {
+          bottomSheetType = "info";
+          return _trackInfoSheet;
+        }
+      );
     } else {
+      // option sheet open?
+      
       _persistentBottomSheetController.close();
       await _persistentBottomSheetController.closed;
       _persistentBottomSheetController = null;
+      bottomSheetType = null;
     }
   }
 
  
-  /// Show or remove [PersistentBottomSheet]
-  openPathEditOptionsSheet() async {
-    if (_persistentBottomSheetController == null) {
+  /// Show or remove [PersistentBottomSheet].
+  /// 
+  /// @param [bool] state used to force a state, no toogle
+  openPathEditOptionsSheet({bool state = true}) async {
+
+    if (_persistentBottomSheetController == null && state == true) {
       _persistentBottomSheetController = 
         _scaffoldKey.currentState.showBottomSheet((BuildContext context) {
-            return _trackEditOptionSheet;
+          bottomSheetType = "options";
+          return _trackEditOptionSheet;
           
       });
     } else {
-      _persistentBottomSheetController.close();
-      await _persistentBottomSheetController.closed;
-      _persistentBottomSheetController = null;
+      if (_persistentBottomSheetController != null) {
+        _persistentBottomSheetController.close();
+        await _persistentBottomSheetController.closed;
+        _persistentBottomSheetController = null;
+        bottomSheetType = null;
+      }
     }
   }
 
@@ -211,7 +226,46 @@ class MapPageState extends State<MapPage> {
   Widget get _trackInfoSheet {
     return Container(
       height: MediaQuery.of(context).size.height * 0.33,
-      color: Colors.blueGrey,
+      width: MediaQuery.of(context).size.width,
+      color: Colors.blueGrey[700],
+      alignment: Alignment.topLeft,
+      padding: EdgeInsets.only(left: 12.0, top: 12.0),
+      child: ListView(
+        padding: EdgeInsets.only(right: 12.0),
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.only(top: 4, bottom: 4, left: 4),
+            color: Colors.blueGrey[600],
+            child: Text("Distance: ${_mapTrack.trackService.trackDistance.toStringAsFixed(2)} km", 
+            
+            ),
+          ),
+          
+          Container(
+            padding: EdgeInsets.only(top: 4, bottom: 4, left: 4),
+            // color: Colors.amber,
+            child: Text("Description: ${_mapTrack.trackService.track.description}"),
+          ),
+          
+          Container(
+            padding: EdgeInsets.only(top: 4.0, bottom: 4, left: 4),
+            color: Colors.blueGrey[600],
+            child: Text("next row"),)
+        ],
+      )
+
+      // child: Column(
+      //   mainAxisSize: MainAxisSize.min,
+      //   mainAxisAlignment: MainAxisAlignment.start,
+      //   children: <Widget>[
+      //     Text("Distance: ${_mapTrack.trackService.trackDistance.toStringAsFixed(2)} km", 
+      //       textAlign: TextAlign.left,
+      //     ),
+      //     Text("Description:",
+      //       textAlign: TextAlign.left,
+      //     )
+      //   ],
+      // ),
     );
   }
 
