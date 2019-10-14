@@ -13,7 +13,8 @@ class InfoModalLayerOptions extends LayerOptions {
 
   InfoModalLayerOptions({
     this.infoElements,
-    this.mapState, rebuild
+    this.mapState, 
+    rebuild
   }) : super(rebuild: rebuild);
 }
 
@@ -126,7 +127,8 @@ class InfoModalLayer extends StatelessWidget {
   }
 }
 
-
+/// Paint [InfoModal].
+/// 
 class InfoModalPainter extends CustomPainter {
   final InfoModal mapInfoElement;
 

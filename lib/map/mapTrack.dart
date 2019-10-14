@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:record_track/readWrite/readFile.dart';
 import 'package:record_track/services/geolocationService.dart';
 
 import '../track/trackService.dart';
@@ -13,10 +14,12 @@ import 'mapScale/scaleLayerPluginOptions.dart';
 import 'mapStatusBar/statusbarPluginOptions.dart';
 import 'mapMarkerDraggable/markerDraggableOptions.dart';
 import 'mapInfoElement/infoModal.dart';
+import 'package:record_track/readWrite/directoryList.dart';
 
 //import 'package:flutter_map/src/geo/crs/crs.dart';
 
-typedef StatusbarEvent = void Function(String event);
+typedef StatusbarEvent = void Function(StatusBarEvent event);
+typedef MapPathCallback = void Function(String mapPath);
 
 /// Provide a map view using flutter_map package
 /// Map view gets also a [StatusbarLayer] and a [ScaleLayer].
@@ -82,13 +85,18 @@ class MapTrackState extends State<MapTrack> {
   );
   LatLng _infoModalPosition;
 
+  
   /// For persistent bottomsheet
   //final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   //PersistentBottomSheetController _persistentBottomSheetController;
 
+  /// callback function
+  MapPathCallback setMapPath;
+
   void initState() {
     super.initState();
     initStreamController();
+    setMapPath = getMapPath;
   }
 
   @override 
@@ -122,10 +130,12 @@ class MapTrackState extends State<MapTrack> {
   onMapPageEvent(TrackPageStreamMsg trackPageStreamMsg) {
     print("MapTrack.onMapPageEvent ${trackPageStreamMsg.type}");
     switch (trackPageStreamMsg.type) {
-      case "updateTrack": 
+      case TrackPageStreamMsgType.UpdateTrack: 
       setState(() {
         
       });
+      break;
+      default: break;
     }
   }
 
@@ -192,7 +202,8 @@ class MapTrackState extends State<MapTrack> {
           // ),
 
           InfoModalLayerOptions(
-            infoElements: infoModal
+            infoElements: infoModal,
+            
           ),
 
           StatusbarLayerPluginOption(
@@ -316,7 +327,7 @@ class MapTrackState extends State<MapTrack> {
       /// Send message to page to show a [PersistentBottomSheet].
       /// 
       print("LatLng at _handleLongPress ${latlng.latitude}, ${latlng.longitude}");
-      streamController.add(TrackPageStreamMsg("pathOptions", "edit"));
+      streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.PathOptions, "edit"));
       
       // setState(() {
       //   _infoModalPosition = latlng;
@@ -384,52 +395,65 @@ class MapTrackState extends State<MapTrack> {
     return Colors.green;
   }
 
-  /// Event msg from [StatusbarLayer].
+  /// Event [StatusBarEvent] from [StatusbarLayer].
   /// 
-  /// - zoom_in, zoom_out: 
-  /// - location_on: toogle gps tracking mode [_location] in switchLocation
-  /// - offline_mode: 
-  /// - info : stream msg to [MapPage]. 
-  /// - edit: toogle track edit mode
-  void statusbarCallback(String event) {
+  /// - [StatusBarEvent.ZoomIn], [StatusBarEvent.ZoomOut]: 
+  /// - [StatusBarEvent.Location]: toogle gps tracking mode [_location] in switchLocation
+  /// - [StatusBarEvent.OfflineMode]: 
+  /// - [StatusBarEvent.Info] : stream msg to [MapPage]. 
+  /// - [StatusBarEvent.Edit]: toogle track edit mode
+  void statusbarCallback(StatusBarEvent event) {
     debugPrint("statusbarCall $event");
 
     switch (event) {
-      case "zoom_in" :
+      case StatusBarEvent.ZoomIn :
       setState(() {
         _mapController.move(_mapController.center, _mapController.zoom + 1.0);
       });
       debugPrint("zoom: ${_mapController.zoom}");
       break;
 
-      case "zoom_out" :
+      case StatusBarEvent.ZoomOut :
       setState(() {
        _mapController.move((_mapController.center), _mapController.zoom - 1.0);
       });
       break;
 
       // geolocation tracking switch
-      case "location_on" :
+      case StatusBarEvent.Location :
       setState(() {
         _location = !_location;
         switchLocation();
       });
       break;
 
-      case "offlineMode" : 
+      case StatusBarEvent.OfflineMode : 
+        if (trackService.track.offlineMapPath == null) {
+          // user must set path to offline map tiles
+          openFileIO();
+        } else {
+          trackService.pathToOfflineMap = trackService.track.offlineMapPath;
+
+          setState(() {
+            _offline = !_offline;
+            //_mapStatusLayer.statusNotification(event.msg, _offline);
+            //trackService.getTrackBoundingCoors();
+          });
+        }
+      
       break;
 
-      case "info" :
-      streamController.add(TrackPageStreamMsg("infoBottomSheet", "open"));
+      case StatusBarEvent.Info :
+      streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.InfoBottomSheet, "open"));
       break;
 
-      case "edit" :
+      case StatusBarEvent.Edit :
       setState(() {
         _edit = !_edit;
         trackService.selectedTrackPoints = null;
         _activeMarker = [];
         if (!_edit) {
-          streamController.add(TrackPageStreamMsg("pathOptions", "close"));
+          streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.PathOptions, "close"));
         }
         
       });
@@ -723,4 +747,33 @@ class MapTrackState extends State<MapTrack> {
   // Widget get _pathOptionSheet {
   //   return Container();
   // }
+
+  /// Open a kind of directory browser to select the director which contains the map tiles
+  ///
+  /// ToDo Open in a new page?
+  openFileIO() async {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) {
+          return DirectoryList(setMapPath);
+        })
+    );
+  }
+
+  /// Callback offline map directory selection
+  /// There was already a basic check if valid directory
+  ///
+  void getMapPath(String mapPath) {
+    print("mapPath: $mapPath");
+    setState(() {
+      trackService.pathToOfflineMap = mapPath;
+      _offline = !_offline;
+      //_mapStatusLayer.statusNotification("offline_on", _offline);
+
+    });
+
+    // add the path to offline map tiles to settings file
+    ReadFile().addToJson("tracksSettings.txt", trackService.track.name, mapPath);
+    // update track
+    trackService.track.offlineMapPath = mapPath;
+  }
 }

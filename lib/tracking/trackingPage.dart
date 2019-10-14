@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:record_track/map/mapTracking.dart';
 import 'package:record_track/track/trackService.dart';
+import 'package:record_track/track/trackingService.dart';
 import 'package:record_track/db/models/track.dart';
 
-/// Start tracking current position.
-/// Create an empty track
-/// 
+/// Page for a [MapTracking] map to show current position / track.
+/// 1. Create an empty track and show map [MapTracking].
+/// 2. Restart tracking using [StatusBarLayer].
+/// 3. Activate tracking for existing track 
+///    (add points to end of track).
+/// When to save positions to db?
+/// Immidiatly or when leaving page?
+/// Add pictures/videos/audios to track points 
 class TrackingPage extends StatefulWidget {
 
   TrackingPage();
@@ -26,9 +32,9 @@ class TrackingPageState extends State<TrackingPage> {
   StreamController<TrackPageStreamMsg> _streamController = StreamController.broadcast();
 
   /// TrackService with empty track, then save track with default values
-  TrackService trackService = TrackService(Track());
+  TrackingService trackingService = TrackingService(Track());
 
-  MapTracking get _mapTracking => MapTracking(_streamController, trackService );
+  MapTracking get _mapTracking => MapTracking(_streamController, trackingService );
 
   bool emptyTrackReady = false;
 
@@ -64,9 +70,9 @@ class TrackingPageState extends State<TrackingPage> {
   /// 
   Future initEmptyTrack() async {
     try {
-      trackService.saveEmptyTrack().then((r) {
+      trackingService.saveEmptyTrack().then((r) {
         if (r == true) {
-          trackService.setTrackStart(trackService.trackLatLngs.first);
+          trackingService.setTrackStart(trackingService.trackLatLngs.first);
           setState(() {
             emptyTrackReady = true; 
           });

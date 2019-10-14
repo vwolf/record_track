@@ -389,13 +389,25 @@ class TrackService {
 
 
 /// Stream messages
+/// 
+/// - @param type [String]
+/// - @param msg [dynamic]
 class TrackPageStreamMsg {
-  String type;
+  // String type;
+  TrackPageStreamMsgType type;
   var msg;
 
   TrackPageStreamMsg(this.type, this.msg);
 }
 
+/// Message types for [TrackPgeStreamMsg.type]:
+/// 
+enum TrackPageStreamMsgType {
+  PathOptions,
+  InfoBottomSheet,
+  UpdateTrack,
+  TrackingMapStatusAction,
+}
 
 /// [Track] edit rollback.
 class TrackRollbackObj {

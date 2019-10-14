@@ -16,11 +16,13 @@ class SelectPage extends StatelessWidget {
 
   SelectPage(this.tracks, this.tracksRead);
 
+  /// Go to NewTrack page
+  /// 
   void _newTrack(BuildContext context) {
     debugPrint("newTrack");
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) {
-        return NewTrack();
+        return NewTrack(tracks);
       })
     );
   }

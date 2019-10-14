@@ -43,8 +43,9 @@ class NewTrack extends StatefulWidget {
 
   final Track track = Track();
   Track _track = Track();
-  
-  NewTrack();
+  List<Track> tracks;
+
+  NewTrack(this.tracks);
 
   NewTrack.withTrack(Track track) {
     this._track = track;
@@ -96,22 +97,22 @@ class _NewTrackState extends State<NewTrack> {
   /// 
   void insertSavedTrack() {
     _newTrack = false;
-      _formSaved = true;
-      _formNameController.text = widget._track.name;
-      _formDescriptionController.text = widget._track.description;
-      _formLocationController.text = widget._track.location;
+    _formSaved = true;
+    _formNameController.text = widget._track.name;
+    _formDescriptionController.text = widget._track.description;
+    _formLocationController.text = widget._track.location;
 
-      if (widget._track.coords != null) {
-        LatLng trackCoords = GeoLocationService.gls.stringToLatLng(widget._track.coords);
-        _formStartLatitudeController.text = trackCoords.latitude.toString();
-        _formStartLongitudeController.text = trackCoords.longitude.toString();
-      }
+    if (widget._track.coords != null) {
+      LatLng trackCoords = GeoLocationService.gls.stringToLatLng(widget._track.coords);
+      _formStartLatitudeController.text = trackCoords.latitude.toString();
+      _formStartLongitudeController.text = trackCoords.longitude.toString();
+    }
 
-      if (widget._track.options != null) {
+    if (widget._track.options != null) {
 
-      }
+    }
 
-      savedTrack = widget._track;
+    savedTrack = widget._track;
   }
 
 
@@ -211,6 +212,7 @@ class _NewTrackState extends State<NewTrack> {
       /// Write to db, returns int
       var dbResult = await DBProvider.db.newTrack(widget.track);
       print(dbResult);
+      widget.tracks.add(widget.track);
 
       /// Add [widget.track.coords] to track coords
       TrackCoord trackCoord = TrackCoord(latitude: startCoords.latitude, longitude: startCoords.longitude);
@@ -583,7 +585,9 @@ class _NewTrackState extends State<NewTrack> {
       return Container();
     }
   }
+  
 }
+
 
 class SubmitBtnWithState extends StatefulWidget {
   final void Function(int) callback;

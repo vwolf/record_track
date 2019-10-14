@@ -19,19 +19,27 @@ class StatusbarLayerPluginOption extends LayerOptions {
 
 class StatusbarPlugin implements MapPlugin {
 
-  @override 
-  Widget createLayer(
-    LayerOptions options,MapState mapState, Stream<Null> stream) {
-      if (options is StatusbarLayerPluginOption) {
-        return StatusbarLayer(options, mapState, stream);
-      }
-      throw Exception('Unkown options type for StatusbarLayerPlugin: $options');
+  StatusbarLayer statusbarLayer;
+
+  @override
+  Widget createLayer(LayerOptions options, MapState mapState,
+      Stream<Null> stream) {
+    if (options is StatusbarLayerPluginOption) {
+      statusbarLayer = StatusbarLayer(options, mapState, stream);
+      return statusbarLayer;
+    }
+    throw Exception('Unkown options type for StatusbarLayerPlugin: $options');
   }
 
-  @override 
+  @override
   bool supportsLayer(LayerOptions options) {
     return options is StatusbarLayerPluginOption;
   }
+
+  StatusbarLayer getStatusbarLayer() {
+    return statusbarLayer;
+  }
+
 }
 
 
@@ -63,42 +71,42 @@ class StatusbarLayer extends StatelessWidget {
                 color: Colors.orange,
                 size: 36.0,
               ),
-              onPressed: () => statusBarEvent("zoom_in"),
+              onPressed: () => statusBarEvent(StatusBarEvent.ZoomIn),
             ),
             IconButton(
               icon: Icon(Icons.zoom_out,
               color: Colors.orange,
               size: 36.0,
               ),
-              onPressed: () => statusBarEvent("zoom_out"),
+              onPressed: () => statusBarEvent(StatusBarEvent.ZoomOut),
             ),
             IconButton(
               icon: Icon(statusbarLayerOpts.location ? Icons.location_on : Icons.location_off,
               color: Colors.orange,
               size: 36.0,
               ),
-              onPressed: () => statusBarEvent("location_on"),
+              onPressed: () => statusBarEvent(StatusBarEvent.Location),
             ),
             IconButton(
               icon: Icon(Icons.offline_pin,
               color: statusbarLayerOpts.offlineMode ? Colors.orange : Colors.black26,
               size: 36.0,
               ),
-              onPressed: () => statusBarEvent("offlineMode"),
+              onPressed: () => statusBarEvent(StatusBarEvent.OfflineMode),
             ),
             IconButton(
               icon: Icon(Icons.info,
               color: Colors.orange,
               size: 36.0,
               ),
-              onPressed: () => statusBarEvent("info"),
+              onPressed: () => statusBarEvent(StatusBarEvent.Info),
             ),
             IconButton(
               icon:Icon(Icons.edit,
               color: statusbarLayerOpts.edit ? Colors.orange : Colors.black26,
               size: 36.0,
             ),
-            onPressed: () => statusBarEvent("edit"),
+            onPressed: () => statusBarEvent(StatusBarEvent.Edit),
             
             ),
           ],
@@ -108,13 +116,21 @@ class StatusbarLayer extends StatelessWidget {
     );
   }
 
-  statusBarEvent(String event) {
+  statusBarEvent(StatusBarEvent event) {
     print("statusBarEvent $event");
   
     statusbarLayerOpts.eventCallback(event);
   }
 }
 
+enum StatusBarEvent {
+  ZoomIn,
+  ZoomOut,
+  Location,
+  OfflineMode,
+  Info,
+  Edit,
+}
 
 // class StatusBar extends StatelessWidget {
 

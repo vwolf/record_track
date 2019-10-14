@@ -82,7 +82,7 @@ class MapPageState extends State<MapPage> {
   /// [trackingPageStreamMsg]
   bool onMapEvent(TrackPageStreamMsg trackingPageStreamMsg) {
     print("TrackingPage.onMapEvent ${trackingPageStreamMsg.type}");
-    if (trackingPageStreamMsg.type == "pathOptions") {
+    if (trackingPageStreamMsg.type == TrackPageStreamMsgType.PathOptions) {
       if (trackingPageStreamMsg.msg == "edit") {
         openPathEditOptionsSheet();
         return true;
@@ -93,7 +93,7 @@ class MapPageState extends State<MapPage> {
       }
     }
 
-    if (trackingPageStreamMsg.type == "infoBottomSheet") {
+    if (trackingPageStreamMsg.type == TrackPageStreamMsgType.InfoBottomSheet) {
       openInfoBottomSheet();
       return true;
     }
@@ -106,7 +106,7 @@ class MapPageState extends State<MapPage> {
   /// redo-insertPoint,redo-addPoint, redo-deletePoint  
   void trackEventCall(String event) {
     print("MapPage.trackEventCall $event");
-    _streamController.add(TrackPageStreamMsg('updateTrack', 'reload'));
+    _streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.UpdateTrack, 'reload'));
     
     // always update state of bottom sheet [_reverseButton] IconButton
     if (_persistentBottomSheetController != null ) {

@@ -55,7 +55,7 @@ class GpxParser {
       }).toList(growable: true);
     }
     
-    // track seqment name
+    // track segment name
     Iterable<xml.XmlElement> items = document.findAllElements('trk');
     items.map((xml.XmlElement item) {
       var trkName = getValue(item.findElements('name'));
