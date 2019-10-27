@@ -83,6 +83,7 @@ class _NewTrackState extends State<NewTrack> {
   InputDecoration _formInputDecoration = InputDecoration(
       labelText: 'Name', labelStyle: TextStyle(color: Colors.white70));
 
+  TextStyle inputDecorationLabelStyle = TextStyle(color: Colors.white70);
 
   @override 
   void initState() {
@@ -334,7 +335,7 @@ class _NewTrackState extends State<NewTrack> {
               },
               decoration: InputDecoration(
                 labelText: "Description",
-                labelStyle: TextStyle(color: Colors.white70),
+                labelStyle: inputDecorationLabelStyle,
               ),
               validator: (value) {
                 if (value.isEmpty) {
@@ -381,7 +382,7 @@ class _NewTrackState extends State<NewTrack> {
                       },
                       decoration: InputDecoration(
                         labelText: 'Location Name',
-                        labelStyle: TextStyle(color: Colors.white70,),
+                        labelStyle: inputDecorationLabelStyle,
                       ),
                       validator: (value) {
                         if (value.isEmpty) {
@@ -437,7 +438,8 @@ class _NewTrackState extends State<NewTrack> {
                     style: _formTextStyle,
                     decoration: InputDecoration(
                         labelText: 'Latitude',
-                        labelStyle: TextStyle(color: Colors.white)),
+                        labelStyle: inputDecorationLabelStyle
+                    ),
                     keyboardType: TextInputType.number,
                   )),
                   Flexible(
@@ -446,7 +448,7 @@ class _NewTrackState extends State<NewTrack> {
                       style: _formTextStyle,
                       decoration: InputDecoration(
                         labelText: 'Longitude',
-                        labelStyle: TextStyle(color: Colors.white),
+                        labelStyle: inputDecorationLabelStyle,
                       ),
                       keyboardType: TextInputType.number,
                     ),

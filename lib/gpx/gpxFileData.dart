@@ -12,6 +12,8 @@ class GpxFileData {
   List<GpxCoord> gpxCoords = [];
   List<LatLng> gpxLatLng = [];
   List<Waypoint> wayPoints = [];
+  List<List<GpxCoord>> trackSegs = [];
+
   String createdAt = "9999";
   Map<String, dynamic> options = {};
 

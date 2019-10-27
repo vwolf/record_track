@@ -6,9 +6,9 @@ import '../track/trackList.dart';
 import '../db/models/track.dart';
 
 /// Kind of main navigation page
-/// New Track
-/// Show All Tracks
-/// Start Recording Track
+/// - New Track
+/// - Show All Tracks
+/// - Start Recording Track
 /// 
 class SelectPage extends StatelessWidget {
   final List<Track> tracks;
@@ -38,6 +38,8 @@ class SelectPage extends StatelessWidget {
     );
   }
 
+  /// All [tracks] in ListView
+  ///
   void _allTracks(BuildContext context) {
     debugPrint("allTracks");
     Navigator.of(context).push(

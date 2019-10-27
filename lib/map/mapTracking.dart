@@ -10,8 +10,11 @@ import 'package:record_track/track/trackingService.dart';
 import 'package:record_track/map/mapScale/scaleLayerPluginOptions.dart';
 import 'package:record_track/map/mapStatusBar/statusbarPluginOptions.dart';
 import 'package:record_track/services/geolocationService.dart';
+import 'package:record_track/readWrite/directoryList.dart';
+import 'package:record_track/readWrite/readFile.dart';
 
 typedef TrackingStatusbarEvent = void Function(StatusBarEvent event);
+typedef MapPathCallback = void Function(String mapPath);
 
 /// Track current position and display as track.
 /// - show [FlutterMap]
@@ -53,9 +56,13 @@ class MapTrackingState extends State<MapTracking> {
 
   TrackingStatusbarEvent statusbarCall;
 
+  /// callback function
+  MapPathCallback setMapPath;
+
   @override 
   void initState() {
     super.initState();
+    setMapPath = getMapPath;
   }
 
   @override 
@@ -142,6 +149,7 @@ class MapTrackingState extends State<MapTracking> {
             offlineMode: _offline,
             location: _location,
             edit: _edit,
+            type: "tracking",
           ),
         ],)
     );
@@ -157,7 +165,60 @@ class MapTrackingState extends State<MapTracking> {
   /// - [StatusBarEvent.Edit]: toogle track edit mode
   void statusbarCallback(StatusBarEvent event) {
     debugPrint("statusbarCall $event");
+    switch (event) {
+      case StatusBarEvent.ZoomIn :
+        setState(() {
+          mapController.move(mapController.center, mapController.zoom + 1.0);
+        });
+        debugPrint("zoom: ${mapController.zoom}");
+        break;
 
+      case StatusBarEvent.ZoomOut :
+        setState(() {
+          mapController.move((mapController.center), mapController.zoom - 1.0);
+        });
+        break;
+
+    // geolocation tracking switch
+      case StatusBarEvent.Location :
+        setState(() {
+          _location = !_location;
+          toggleTracker(true);
+        });
+        break;
+
+      case StatusBarEvent.OfflineMode :
+        if (widget.trackingService.track.offlineMapPath == null) {
+          // user must set path to offline map tiles
+          openFileIO();
+        } else {
+          widget.trackingService.pathToOfflineMap = widget.trackingService.track.offlineMapPath;
+
+          setState(() {
+            _offline = !_offline;
+            //_mapStatusLayer.statusNotification(event.msg, _offline);
+            //trackService.getTrackBoundingCoors();
+          });
+        }
+
+        break;
+
+      case StatusBarEvent.Info :
+        _streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.InfoBottomSheet, "open"));
+        break;
+
+      case StatusBarEvent.Edit :
+//        setState(() {
+//          _edit = !_edit;
+//          widget.trackingService.selectedTrackPoints = null;
+//          _activeMarker = [];
+//          if (!_edit) {
+//            _streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.PathOptions, "close"));
+//          }
+//
+//        });
+        break;
+    }
   }
 
   /// Position Stream from Geolocation
@@ -204,4 +265,32 @@ class MapTrackingState extends State<MapTracking> {
   }
 
 
+  /// Open a kind of directory browser to select the director which contains the map tiles
+  ///
+  /// ToDo Open in a new page?
+  openFileIO() async {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) {
+          return DirectoryList(setMapPath);
+        })
+    );
+  }
+
+  /// Callback offline map directory selection
+  /// There was already a basic check if valid directory
+  ///
+  void getMapPath(String mapPath) {
+    print("mapPath: $mapPath");
+    setState(() {
+      widget.trackingService.pathToOfflineMap = mapPath;
+      _offline = !_offline;
+      //_mapStatusLayer.statusNotification("offline_on", _offline);
+
+    });
+
+    // add the path to offline map tiles to settings file
+    ReadFile().addToJson("tracksSettings.txt", widget.trackingService.track.name, mapPath);
+    // update track
+    widget.trackingService.track.offlineMapPath = mapPath;
+  }
 }

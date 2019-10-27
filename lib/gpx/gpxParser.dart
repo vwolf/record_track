@@ -89,7 +89,7 @@ class GpxParser {
     return gpxFileData;
   }
 
-List<GpxCoord> parseGpx(Iterable<xml.XmlElement> trkseq) {
+  List<GpxCoord> parseGpx(Iterable<xml.XmlElement> trkseq) {
     List<GpxCoord> trkList = List();
     trkseq.map((xml.XmlElement trkpt) {
       Iterable<xml.XmlElement> pts = trkpt.findElements('trkpt');

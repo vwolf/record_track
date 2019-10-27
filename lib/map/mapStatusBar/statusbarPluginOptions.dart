@@ -5,6 +5,7 @@ import '../mapTrack.dart';
 class StatusbarLayerPluginOption extends LayerOptions {
   
   StatusbarEvent eventCallback;
+  String type = "followTrack";
   bool offlineMode;
   bool location;
   bool edit;
@@ -13,7 +14,8 @@ class StatusbarLayerPluginOption extends LayerOptions {
     this.eventCallback, 
     this.offlineMode, 
     this.location, 
-    this.edit });
+    this.edit,
+    this.type });
 }
 
 
@@ -42,7 +44,15 @@ class StatusbarPlugin implements MapPlugin {
 
 }
 
-
+/// Statusbar has following icons:
+/// - zoomIn
+/// - zoomOut
+/// - location
+/// - offlineMode
+/// - info
+/// - edit
+/// Display depending on map context: following track or tracking
+///
 class StatusbarLayer extends StatelessWidget {
 
   final StatusbarLayerPluginOption statusbarLayerOpts;
@@ -115,6 +125,59 @@ class StatusbarLayer extends StatelessWidget {
       )
     );
   }
+
+//  Widget get _followTrackIcons {
+//    return Container(
+//      color: Colors.white70,
+//      child: Row(
+//        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//        mainAxisSize: MainAxisSize.max,
+//        children: <Widget>[
+//          IconButton(
+//            icon: Icon(Icons.zoom_in,
+//              color: Colors.orange,
+//              size: 36.0,
+//            ),
+//            onPressed: () => statusBarEvent(StatusBarEvent.ZoomIn),
+//          ),
+//          IconButton(
+//            icon: Icon(Icons.zoom_out,
+//              color: Colors.orange,
+//              size: 36.0,
+//            ),
+//            onPressed: () => statusBarEvent(StatusBarEvent.ZoomOut),
+//          ),
+//        ],
+//      ),
+//    );
+//  }
+
+  /// ZoomIn, ZoomOut, OfflineMode, Location, Info,
+//  Widget get _trackingIcons {
+//    return Container(
+//      color: Colors.white70,
+//      child: Row(
+//        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//        mainAxisSize: MainAxisSize.max,
+//        children: <Widget>[
+//          IconButton(
+//            icon: Icon(Icons.zoom_in,
+//              color: Colors.orange,
+//              size: 36.0,
+//            ),
+//            onPressed: () => statusBarEvent(StatusBarEvent.ZoomIn),
+//          ),
+//          IconButton(
+//            icon: Icon(Icons.zoom_out,
+//              color: Colors.orange,
+//              size: 36.0,
+//            ),
+//            onPressed: () => statusBarEvent(StatusBarEvent.ZoomOut),
+//          ),
+//        ],
+//      ),
+//    );
+//  }
 
   statusBarEvent(StatusBarEvent event) {
     print("statusBarEvent $event");
