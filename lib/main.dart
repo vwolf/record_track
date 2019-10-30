@@ -20,6 +20,8 @@ import 'db/models/track.dart';
 import 'track/trackListService.dart';
 import 'db/database.dart';
 
+import 'package:record_track/services/directoryList.dart';
+
 /// Example uses locale.countryĆode, which is not working as countyCode is null
 /// 
 class DemoLocalizations {
@@ -117,6 +119,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  /// callback function
+  MapPathCallback setMapPath;
+
   String _gpxFileDirectoryString = "?";
   List<Track> _tracks = [];
   Map<String, dynamic> trackSettings = {};
@@ -131,6 +136,38 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(DemoLocalizations.of(context).title),
       ),
+      endDrawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            const DrawerHeader(
+              child: const Center(
+                child: const Text("Settings"),
+              ),
+            ),
+            ListTile(
+              title: Text("Track Directory"),
+              subtitle: Text(Settings.settings.defaultTrackDirectory),
+              trailing: IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  openFileIO();
+                  //Navigator.pop(context);
+                },
+              ),
+            ),
+            ListTile(
+              title: Text("Offline Map Directory"),
+              subtitle: Text(Settings.settings.pathToMapTiles),
+              trailing: IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
       body: Center(
         child: SelectPage(_tracks, tracksRead),
       ),
@@ -144,6 +181,8 @@ class _MyHomePageState extends State<MyHomePage> {
   /// 
   void initState() {
     super.initState();
+
+    setMapPath = getMapPath;
 
     loadTracks();
   }
@@ -175,6 +214,7 @@ class _MyHomePageState extends State<MyHomePage> {
           String trackDirectory = "${Settings.settings.externalSDCard}/${Settings.settings.defaultTrackDirectory}";
           print(trackDirectory);
           Settings.settings.pathToMapTiles = "${Settings.settings.externalSDCard}/${Settings.settings.pathToMapTiles}";
+          print(Settings.settings.externalSDCard);
           searchSDCard().then((r) {
             if (r == true) {
               print("SEARCH SDCARD!!");
@@ -314,6 +354,34 @@ class _MyHomePageState extends State<MyHomePage> {
         return false;
         break;
     }
+  }
+
+  openFileIO() {
+    //Settings.settings.get({"externalSDCard": true});
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) {
+        return DirectoryList(setMapPath, Settings.settings.externalSDCard);
+      })
+    );
+  }
+
+
+  /// Callback offline map directory selection
+  /// There was already a basic check if valid directory
+  ///
+  void getMapPath(String mapPath) {
+    print("mapPath: $mapPath");
+    setState(() {
+      //trackService.pathToOfflineMap = mapPath;
+      //_offline = !_offline;
+      //_mapStatusLayer.statusNotification("offline_on", _offline);
+
+    });
+
+    // add the path to offline map tiles to settings file
+    //ReadFile().addToJson("tracksSettings.txt", trackService.track.name, mapPath);
+    // update track
+    //trackService.track.offlineMapPath = mapPath;
   }
 }
 

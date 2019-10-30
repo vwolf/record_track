@@ -14,8 +14,8 @@ import 'mapScale/scaleLayerPluginOptions.dart';
 import 'mapStatusBar/statusbarPluginOptions.dart';
 import 'mapMarkerDraggable/markerDraggableOptions.dart';
 import 'mapInfoElement/infoModal.dart';
-import 'package:record_track/readWrite/directoryList.dart';
-
+import 'package:record_track/services//directoryList.dart';
+import 'package:record_track/services/settings.dart';
 //import 'package:flutter_map/src/geo/crs/crs.dart';
 
 typedef StatusbarEvent = void Function(StatusBarEvent event);
@@ -197,13 +197,9 @@ class MapTrackState extends State<MapTrack> {
             markers: trackStartEndMarker
           ),
 
-          // MarkerDraggableLayerPluginOptions(
-          //   markers: draggableMarker,
-          // ),
-
           InfoModalLayerOptions(
             infoElements: infoModal,
-            
+
           ),
 
           StatusbarLayerPluginOption(
@@ -230,6 +226,7 @@ class MapTrackState extends State<MapTrack> {
           ),
           /// InfoModalLayer is blocking Statusbar, sort layer in some way
           /// InfoModalLayer should be on top of track and marker layers
+          /// This happens only in simulator?
           // InfoModalLayerOptions(
           //   infoElements: infoModal
           // ),
@@ -260,9 +257,10 @@ class MapTrackState extends State<MapTrack> {
       }
     }
 
-    /// 
+    /// Close bottomSheet edit
     if (_edit && trackService.selectedTrackPoints != null) {
       trackService.selectedTrackPoints = null;
+      streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.PathOptions, "close"));
       setState(() {
         
       });
@@ -447,17 +445,24 @@ class MapTrackState extends State<MapTrack> {
       streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.InfoBottomSheet, "open"));
       break;
 
+      /// edit option only possible if track data in db
+      /// ToDo: Modify gpx file directly?
       case StatusBarEvent.Edit :
-      setState(() {
-        _edit = !_edit;
-        trackService.selectedTrackPoints = null;
-        _activeMarker = [];
-        if (!_edit) {
-          streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.PathOptions, "close"));
+        if (trackService.trackSource != TrackSource.DB) {
+          print("Edit mode only possible if track source is DB");
+          notificationDialog();
+          break;
         }
-        
-      });
-      break;
+        setState(() {
+          _edit = !_edit;
+          trackService.selectedTrackPoints = null;
+          _activeMarker = [];
+          if (!_edit) {
+            streamController.add(TrackPageStreamMsg(TrackPageStreamMsgType.PathOptions, "close"));
+          }
+        });
+
+        break;
     }
   }
 
@@ -653,6 +658,7 @@ class MapTrackState extends State<MapTrack> {
                     feedback: Icon(
                       Icons.donut_large,
                       color: Colors.blueAccent,
+                      size: 32.0,
                     ),
                     onDraggableCanceled: (a, b) => _dragCanceled(a, b, i),
                   ),
@@ -730,6 +736,27 @@ class MapTrackState extends State<MapTrack> {
     return infoModal;
   }
 
+
+  /// Show dialog
+  Future notificationDialog() async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: Text("Editing of tracks read from file not possible!"),
+            children: <Widget>[
+              SimpleDialogOption(
+                child: Text("Ok"),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              )
+            ],
+          );
+        });
+  }
+
+
   // openPersistenBottomSheet() async {
   //   if (_persistentBottomSheetController == null) {
   //     Scaffold cState = context.ancestorWidgetOfExactType(Scaffold);
@@ -754,7 +781,7 @@ class MapTrackState extends State<MapTrack> {
   openFileIO() async {
     Navigator.of(context).push(
         MaterialPageRoute(builder: (context) {
-          return DirectoryList(setMapPath);
+          return DirectoryList(setMapPath, Settings.settings.externalSDCard);
         })
     );
   }

@@ -25,4 +25,10 @@ class Settings {
       distanceToTrackAlert = readSettings["distanceToTrackAlert"];
     }
   }
+
+//  get(Map getSettings) {
+//    if (getSettings.containsKey("externalSDCard")) {
+//      return externalSDCard;
+//    }
+//  }
 }

@@ -10,8 +10,9 @@ import 'package:record_track/track/trackingService.dart';
 import 'package:record_track/map/mapScale/scaleLayerPluginOptions.dart';
 import 'package:record_track/map/mapStatusBar/statusbarPluginOptions.dart';
 import 'package:record_track/services/geolocationService.dart';
-import 'package:record_track/readWrite/directoryList.dart';
+import 'package:record_track/services//directoryList.dart';
 import 'package:record_track/readWrite/readFile.dart';
+import 'package:record_track/services/settings.dart';
 
 typedef TrackingStatusbarEvent = void Function(StatusBarEvent event);
 typedef MapPathCallback = void Function(String mapPath);
@@ -271,7 +272,7 @@ class MapTrackingState extends State<MapTracking> {
   openFileIO() async {
     Navigator.of(context).push(
         MaterialPageRoute(builder: (context) {
-          return DirectoryList(setMapPath);
+          return DirectoryList(setMapPath, Settings.settings.externalSDCard );
         })
     );
   }

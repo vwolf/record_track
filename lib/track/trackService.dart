@@ -25,7 +25,7 @@ import '../map/mapPage.dart';
 /// 
 class TrackService {
   Track track;
-
+  TrackSource trackSource = TrackSource.NONE;
   TrackService(this.track);
 
   GpxFileData gpxFileData = GpxFileData();
@@ -56,6 +56,7 @@ class TrackService {
         getTrackDistance().then((r) {
           trackDistance = r;
         });
+        trackSource = TrackSource.FILE;
         return true;
       });
     } else {
@@ -70,6 +71,7 @@ class TrackService {
         getTrackDistance().then((r) {
           trackDistance = r;
         });
+        trackSource = TrackSource.DB;
         return true;
       });
     }
@@ -422,4 +424,11 @@ enum TrackAction {
   AddPoint,
   DeletePoint,
   InsertPoint,
+}
+
+enum TrackSource {
+  DB,
+  FILE,
+  TEMP,
+  NONE,
 }
