@@ -9,6 +9,8 @@ typedef MapPathCallback = void Function(String mapPath);
 
 /// Kind of directory browser for internal and external (SDCard) storage
 ///
+/// - @param [callback]
+/// - @param [startPath]
 class DirectoryList extends StatefulWidget {
   final callback;
   final startPath;
@@ -21,16 +23,12 @@ class DirectoryList extends StatefulWidget {
 
 
 class DirectoryListState extends State<DirectoryList> {
-
   final startPath;
 
   DirectoryListState(this.startPath);
 
-  Directory externalStorageDir;
-
-  //var currentDirPath = startPath;
-
-  //var currentDir = Directory(widget.startPath);
+  Directory currentDir;
+  int selectedDirectory;
 
   @override
   Widget build(BuildContext context) {
@@ -59,23 +57,25 @@ class DirectoryListState extends State<DirectoryList> {
     );
   }
 
-
+  /// List of directory's in [currentDir].
+  /// For first level set [currentDir] to [startDir]
+  ///
   Future<List<String>> _directoryList() async {
     var filesList = List<String>();
 
-    if (externalStorageDir == null) {
-     // externalStorageDir = await getExternalStorageDirectory();
-      externalStorageDir = Directory(startPath);
-      List<FileSystemEntity>directoryList = externalStorageDir.listSync(recursive: false, followLinks: false);
+    if (currentDir == null) {
+      currentDir = Directory(startPath);
+    }
 
-      for (var file in directoryList) {
-        filesList.add(file.path.split('/').last);
+    List<FileSystemEntity>directoryList = currentDir.listSync(recursive: false, followLinks: false);
 
-      }
-    } else {
-      externalStorageDir.list(recursive: false, followLinks: false)
-          .listen((FileSystemEntity entity) {
-            filesList.add(entity.path.split('/').last);
+    for (var file in directoryList) {
+      FileSystemEntity.isDirectory(file.path).then((isDir) {
+        if (isDir) {
+          filesList.add(file.path.split('/').last);
+        } else {
+          filesList.add(file.path.split('/').last);
+        }
       });
     }
 
@@ -83,8 +83,9 @@ class DirectoryListState extends State<DirectoryList> {
   }
 
 
-  /// ListView with directorys at path
-  /// Trailing icon (arrow) selects directory
+
+  /// ListView with directory's at path
+  /// Trailing icon (check mark) selects directory
   /// Tap on directory name returns the directory path
   ///
   Widget buildDirectoryList(BuildContext context, List<String> snapshot) {
@@ -93,29 +94,54 @@ class DirectoryListState extends State<DirectoryList> {
         child: ListView.builder(
           itemCount: snapshot.length,
             itemBuilder: (context, index) {
+            if(_directoryCheck(snapshot[index])) {
               return ListTile(
-                onTap: () {
-                  widget.callback("${snapshot[index]}");
-                },
                 contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 1),
                 title: Text(snapshot[index]),
                 trailing: IconButton(
-                  icon: Icon(Icons.arrow_forward),
+                  icon: Icon(Icons.check,
+                  color: selectedDirectory == index ? Colors.white : Colors.blueGrey),
                   onPressed: () {
-                    _listDirectory(snapshot[index]);
+                    print("Index at onPressed: $index");
+                    setState(() {
+                      selectedDirectory = index;
+                    });
+
+                    widget.callback("${currentDir.path}/${snapshot[index]}");
+                    Navigator.pop(context);
                   },
                 ),
+                onTap: () {
+                  _listDirectory(snapshot[index]);
+                },
               );
-            }),
+            } else {
+              return ListTile(
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+                title: Text(snapshot[index]),
+              );
+            }
+          }),
       ),
     );
   }
 
+  /// Path is an directory?
+  ///
+  /// - @param [path]
+  bool _directoryCheck(String path) {
+    bool isDir = FileSystemEntity.isDirectorySync("${currentDir.path}/$path");
+
+    return isDir;
+  }
+
+
+  /// Get directory's in directory, then rebuild
   _listDirectory(String directory) async {
     var directoryContent = List<String>();
 
-    externalStorageDir = Directory('${externalStorageDir.path}/$directory');
-    Directory(externalStorageDir.path).list(recursive: false, followLinks: false)
+    currentDir = Directory('${currentDir.path}/$directory');
+    Directory(currentDir.path).list(recursive: false, followLinks: false)
     .listen((FileSystemEntity entity) {
       FileSystemEntity.isDirectory(entity.path).then((isDir) {
         if (isDir) {

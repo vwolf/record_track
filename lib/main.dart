@@ -145,8 +145,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ListTile(
-              title: Text("Track Directory"),
-              subtitle: Text(Settings.settings.defaultTrackDirectory),
+              title: Text("Track Directory SD Card" ),
+              subtitle: Settings.settings.pathTracksExternal != null ? Text(Settings.settings.pathTracksExternal) : Text("Not directory selected"),
               trailing: IconButton(
                 icon: Icon(Icons.edit),
                 onPressed: () {
@@ -165,6 +165,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
             ),
+            ListTile(
+              contentPadding: EdgeInsets.only(right: 44.0, top: 12.0),
+              trailing: IconButton(
+                icon: Icon(Icons.keyboard_return,
+                size: 52.0,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            )
           ],
         ),
       ),
@@ -182,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
 
-    setMapPath = getMapPath;
+    setMapPath = setTracksFilePath;
 
     loadTracks();
   }
@@ -207,18 +218,20 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }).then((_) {
         // tracks on sd card?
-        print(Settings.settings.externalSDCard);
-        print(Settings.settings.pathTracksInternal);
+        // first check default location then pathTrackExternal in Settings
+        print("SDCard path: ${Settings.settings.externalSDCard}");
+        print("Settings.pathTrackExternal: ${Settings.settings.pathTracksExternal}");
         if (Settings.settings.externalSDCard != null) {
           // build default path
           String trackDirectory = "${Settings.settings.externalSDCard}/${Settings.settings.defaultTrackDirectory}";
-          print(trackDirectory);
-          Settings.settings.pathToMapTiles = "${Settings.settings.externalSDCard}/${Settings.settings.pathToMapTiles}";
-          print(Settings.settings.externalSDCard);
+          print("SDCard default path: $trackDirectory");
           searchSDCard().then((r) {
             if (r == true) {
               print("SEARCH SDCARD!!");
               findTracks(trackDirectory);
+              if (Settings.settings.pathTracksExternal != null) {
+                findTracks(Settings.settings.pathTracksExternal);
+              }
             } else {
               // r == null: click outside of dialog, r == false: cancel button in dialog
               print("Search SD card canceled");
@@ -234,15 +247,17 @@ class _MyHomePageState extends State<MyHomePage> {
   /// Add to [Settings]
   /// Uses  path_provider_ex,
   ///
+  /// ToDo: Path from [getExternalStorageDirectory] does not work? Path hard coded!
   Future<bool> setStoragePath() async {
     List<StorageInfo> storageInfo;
 
     // storage Android
     if (Platform.isAndroid) {
       // storage internal
-      var dir = await getExternalStorageDirectory();
-      Settings.settings.pathTracksInternal = "${dir.path}/${Settings.settings.defaultTrackDirectory}";
-
+      //var dir = await getExternalStorageDirectory();
+      //var dir = await getApplicationDocumentsDirectory();
+      //Settings.settings.pathTracksInternal = "${dir.path}/${Settings.settings.defaultTrackDirectory}";
+      Settings.settings.pathTracksInternal = "/data/data/com.devwolf.record_track/files/Tracks";
       // storage sd card (external)
       try {
         storageInfo = await PathProviderEx.getStorageInfo();
@@ -275,15 +290,17 @@ class _MyHomePageState extends State<MyHomePage> {
     
   }
 
-
+  ///data/data/com.devwolf.record_track/files/Tracks/gransee.gpx
   /// Add all gpx files in [directoryPath] to [trackPath].
   /// Then call [loadTrackMetaData] to read gpx files.
   ///
   /// [directoryPath]
   void findTracks(String directoryPath) {
+    print("findTracks for path: $directoryPath");
     List<String> trackPath = [];
     Directory(directoryPath).list(recursive: true, followLinks: false)
         .listen((FileSystemEntity entity) {
+          print("path: ${entity.path}");
           if (path.extension(entity.path) == ".gpx") {
             if (trackPath.contains(entity.path) == false) {
               trackPath.add(entity.path);
@@ -369,9 +386,13 @@ class _MyHomePageState extends State<MyHomePage> {
   /// Callback offline map directory selection
   /// There was already a basic check if valid directory
   ///
-  void getMapPath(String mapPath) {
+  void setTracksFilePath(String mapPath) {
     print("mapPath: $mapPath");
     setState(() {
+      Settings.settings.pathToTracks = mapPath;
+      Settings.settings.pathTracksExternal = mapPath;
+
+      findTracks(Settings.settings.pathTracksExternal);
       //trackService.pathToOfflineMap = mapPath;
       //_offline = !_offline;
       //_mapStatusLayer.statusNotification("offline_on", _offline);
