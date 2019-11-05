@@ -30,6 +30,7 @@ class _TrackListState extends State<TrackList> {
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blueGrey,
       appBar: AppBar(
         title: Text("Tracks"),
       ),
@@ -116,13 +117,30 @@ class _TrackListState extends State<TrackList> {
   }
 
 
-  editTour(BuildContext context, Track track) {
-    Navigator.of(context).push(
-      new MaterialPageRoute(builder: (context) {
-        return NewTrack.withTrack(track);
-      })
+
+  /// Navigate to page and consume result.
+  ///
+  /// - @param: [track] track to edit
+  editTour(BuildContext context, Track track) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => NewTrack.withTrack(track) )
     );
+    print("editTourWithReturn: $result");
+    if (result != null) {
+      if (result is Track) {
+        int i = widget.tracks.indexWhere((t) => t.id == result.id);
+        if (i != -1) {
+          widget.tracks.replaceRange(i, i + 1, [result]);
+        }
+      }
+      setState(() {
+
+      });
+
+    }
   }
+
 
   /// Go to Save tour to external page
   archiveTour(BuildContext context, Track track) {
@@ -151,7 +169,8 @@ class _TrackListState extends State<TrackList> {
     setState(() {});
   }
 
-
+  /// Open track map
+  ///
   goTrackDetailPage(TrackService trackService) {
     setState(() {
       
@@ -210,10 +229,13 @@ class _TrackListState extends State<TrackList> {
                       icon: Icon(Icons.edit,
                       size: 36.0,),
                       onPressed: () {},
-                      color: Colors.green,
+                      color:  snapshot.data[index].gpxFilePath == null ? Colors.green : Colors.grey[700],
                     ),
                     onPress: () {
-                      editTour(context, snapshot.data[index]);
+                      //editTour(context, snapshot.data[index]);
+                      if (snapshot.data[index].gpxFilePath == null) {
+                        editTour(context, snapshot.data[index]);
+                      }
                     }
                   ),
                   ActionItems(
@@ -221,25 +243,30 @@ class _TrackListState extends State<TrackList> {
                           icon: Icon(Icons.archive,
                           size: 36.0,),
                           onPressed: () {},
-                          color:  Colors.green,
+                          color:  snapshot.data[index].gpxFilePath == null ? Colors.green : Colors.grey[700],
                       ),
                       onPress: () {
-                        archiveTour(context, snapshot.data[index]);
+                        if (snapshot.data[index].gpxFilePath == null) {
+                          archiveTour(context, snapshot.data[index]);
+                        }
                       },
-                      backgroundColor: Colors.orange
+                      //backgroundColor: snapshot.data[index].gpxFilePath == null ? Colors.orange : Colors.grey[700],
                     ),
                     ActionItems(
                       icon: IconButton(
                           icon: Icon(Icons.delete,
                             size: 36.0,),
                           onPressed: () {},
-                          color:  Colors.red,
+                          color:  snapshot.data[index].gpxFilePath == null ? Colors.red : Colors.grey[700],
                         ),
                         onPress: () {
                           print("delete track");
-                          deleteTrack(context, index);
+                          if (snapshot.data[index].gpxFilePath == null) {
+                            deleteTrack(context, index);
+                          }
+
                         },
-                        backgroundColor: Colors.white70
+                        //backgroundColor: Colors.white70
                     ),
                 ],
                 // child: Container(
@@ -247,22 +274,25 @@ class _TrackListState extends State<TrackList> {
                 //   child: Text(snapshot.data[index].location),
                 // ));
                 child: Container(
-                  padding: const EdgeInsets.only(top: 2.0),
+                  color: Colors.blueGrey,
+                  padding: const EdgeInsets.only(top: 0.0),
                   height: 120,
                   //constraints: BoxConstraints(maxHeight: 200.0, minHeight: 100.0),
                   //constraints: BoxFit.fitHeight,
                   //height: double.infinity,
-                  child: Card(child: InkWell(
+                  child: Card(
+                    color: Colors.blueGrey,
+                    child: InkWell(
                     onTap: () {
                       _handleTap(snapshot.data[index]);
                     },
                     child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                       leading: Container(
                         padding: EdgeInsets.only(right: 10.0),
                         decoration: BoxDecoration(
                           border: Border(
-                            right: BorderSide(width: 1.0, color: Colors.black87)
+                            right: BorderSide(width: 1.0, color: Colors.white)
                           )
                         ),
                         child: Icon(
@@ -280,7 +310,8 @@ class _TrackListState extends State<TrackList> {
                           Text(snapshot.data[index].location),
                         ],
                       ),
-                      trailing: Icon(Icons.keyboard_arrow_right, size: 30.0,),
+                      //trailing: Icon(Icons.keyboard_arrow_right, size: 30.0,),
+                      trailing: snapshot.data[index].gpxFilePath == null ? Icon(Icons.keyboard_arrow_right, size: 30.0,) : Icon(Icons.insert_drive_file),
                     )
                   ),
                   ),

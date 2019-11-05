@@ -31,7 +31,7 @@ class TrackService {
   GpxFileData gpxFileData = GpxFileData();
    // list of coords in table trackCoord
   List<TrackCoord> trackCoords;
-  List<LatLng> trackLatLngs;
+  List<LatLng> trackLatLngs = [];
 
   /// Map State variables
   List<int> selectedTrackPoints;
@@ -85,11 +85,15 @@ class TrackService {
     var name_ext = DateTime.now().toString();
     // replace not allowed chars in table name
     name_ext = name_ext.replaceAll(RegExp(r'[:\.\-]'), '_');
+    print (track);
+
     track.name = "track_$name_ext";
     track.description = "tracking start";
     track.location = "later";
     track.timestamp = DateTime.now();
     track.createdAt = DateTime.now().toIso8601String();
+    Map<String,dynamic> options = {"type": "walk"};
+    track.options = jsonEncode(options);
     track.coords = GeoLocationService.gls.latlngToJson(currentPosition);
     trackLatLngs = [];
     trackLatLngs.add(currentPosition);
@@ -375,6 +379,10 @@ class TrackService {
   Future<double> getTrackDistance() async {
     //double totalDistance = 0;
     double totalDistanceGeo = 0;
+    if (trackLatLngs == null) {
+      return 0.0;
+    }
+
     for (var i = 0; i < trackLatLngs.length - 1; i++) {
       totalDistanceGeo += await Geolocator().distanceBetween(
         trackLatLngs[i].latitude, 

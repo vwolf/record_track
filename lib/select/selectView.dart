@@ -18,23 +18,28 @@ class SelectPage extends StatelessWidget {
 
   /// Go to NewTrack page
   /// 
-  void _newTrack(BuildContext context) {
+  _newTrack(BuildContext context) async {
     debugPrint("newTrack");
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) {
-        return NewTrack(tracks);
-      })
+    var result = Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => NewTrack(tracks) )
     );
+
+    if (result != null) {
+      if (result is Track) {
+        tracks.add(result as Track);
+
+      }
+    }
   }
 
   /// Start tracking now. 
   /// Create new track
-  void _startTrack(BuildContext context) {
+  _startTrack(BuildContext context) {
     debugPrint("startTrack");
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) {
-        return TrackingPage();
-      })
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => TrackingPage() )
     );
   }
 

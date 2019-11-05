@@ -7,15 +7,15 @@ import 'package:record_track/db/models/track.dart';
 /// trackpoints created during tracking are here.
 ///
 /// - hold list with positions here, use to draw track
-/// Wenn tracking is temporaer stopped track should not show
+/// If tracking is temporearly stopped track should not show
 /// part which is not tracked.
 /// -
 class TrackingService extends TrackService {
-  Track track;
 
   List<LatLng> trackPoints = [];
 
-  TrackingService(Track track) :super(track);
+  TrackingService(): super(Track());
+
 
   /// Add each new track point.
   /// [super.addPointToTrack] will update track and save point to db.

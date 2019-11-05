@@ -36,7 +36,7 @@ class MapTracking extends StatefulWidget {
 class MapTrackingState extends State<MapTracking> {
 
   /// MapController
-  MapController mapController;
+  MapController mapController = MapController();
 
   LatLng get startPos => widget.trackingService.getTrackStart();
 
@@ -138,13 +138,19 @@ class MapTrackingState extends State<MapTracking> {
           PolylineLayerOptions(
             polylines: [
               Polyline(
-                points: widget.trackingService.trackPoints,
+                points: widget.trackingService.trackLatLngs,
                 strokeWidth: 4.0,
                 color: Colors.blueAccent,
               )
             ],
             //onTap: (Polyline polyline, LatLng latlng, int polylineIdx) => _onTap("track", polyline, latlng, polylineIdx),  
           ),
+
+          // layer for current position
+          MarkerLayerOptions(
+              markers: gpsPositionList
+          ),
+
           StatusbarLayerPluginOption(
             eventCallback: statusbarCallback,
             offlineMode: _offline,
@@ -222,6 +228,32 @@ class MapTrackingState extends State<MapTracking> {
     }
   }
 
+  /// Return current position as marker
+  /// Show last points (5?)
+  List<Marker> get gpsPositionList => makeGpsPositionList();
+
+  List<Marker> makeGpsPositionList() {
+    List<Marker> ml = [];
+
+    // use last marker
+    if (widget.trackingService.trackPoints.length > 0) {
+      Marker newMarker = Marker(
+        width: 60.0,
+        height: 60.0,
+        point: widget.trackingService.trackPoints.last,
+        builder: (ctx) =>
+            Container(
+              child: Icon(
+                Icons.my_location,
+              ),
+            )
+      );
+      ml.add(newMarker);
+    }
+    return ml;
+  }
+
+
   /// Position Stream from Geolocation
   /// 
   /// Subscribe / Unsubscribe to PositionStream in Geolocation
@@ -259,9 +291,13 @@ class MapTrackingState extends State<MapTracking> {
     // update current position marker
     if (_statusbarPlugin.getStatusbarLayer().statusbarLayerOpts.location == true) {
       LatLng currentPos = LatLng(coords.latitude, coords.longitude);
-      widget.trackingService.addTrackingPoint(currentPos);
+      //widget.trackingService.addTrackingPoint(currentPos);
 
-     // makeGpsPosList(currentPos: currentPos);
+      //makeGpsPosList(currentPos: currentPos);
+      setState(() {
+        gpsPositionList;
+      });
+
     }
   }
 

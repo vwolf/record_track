@@ -78,12 +78,12 @@ class _NewTrackState extends State<NewTrack> {
   final FocusNode _locationFocus = FocusNode();
 
   // Form style
-  TextStyle _formTextStyle = TextStyle(color: Colors.white);
+  TextStyle _formTextStyle = TextStyle(color: Colors.blueGrey, fontSize: 12.0);
  
   InputDecoration _formInputDecoration = InputDecoration(
-      labelText: 'Name', labelStyle: TextStyle(color: Colors.white70));
+      labelText: 'Name', labelStyle: TextStyle(color: Colors.blueGrey, fontSize: 12.0));
 
-  TextStyle inputDecorationLabelStyle = TextStyle(color: Colors.white70);
+  TextStyle inputDecorationLabelStyle = TextStyle(color: Colors.black, fontSize: 12.0);
 
   @override 
   void initState() {
@@ -110,7 +110,11 @@ class _NewTrackState extends State<NewTrack> {
     }
 
     if (widget._track.options != null) {
-
+      
+    } else {
+      // default option type: walk
+      Map<String, dynamic> options = {"type" : _trackType};
+      widget.track.options = jsonEncode(options);
     }
 
     savedTrack = widget._track;
@@ -211,14 +215,33 @@ class _NewTrackState extends State<NewTrack> {
       widget.track.timestamp = DateTime.now();
 
       /// Write to db, returns int
-      var dbResult = await DBProvider.db.newTrack(widget.track);
-      print(dbResult);
-      widget.tracks.add(widget.track);
+      if (_newTrack) {
+        var dbResult = await DBProvider.db.newTrack(widget.track);
+        print(dbResult);
+        widget.tracks.add(widget.track);
+      } else {
+        // update values in new track object
+        widget.track.id = widget._track.id;
+        widget.track.track = widget._track.track;
+
+        // options - type can be changed but that is already set
+        //
+
+        await DBProvider.db.updateTrack(widget.track);
+        // map track to _track?
+
+        Navigator.pop(context, widget.track);
+      }
+
 
       /// Add [widget.track.coords] to track coords
       TrackCoord trackCoord = TrackCoord(latitude: startCoords.latitude, longitude: startCoords.longitude);
-      var addTrackCoordResult = await DBProvider.db.addTrackCoord(trackCoord, widget.track.track);
-      debugPrint("addTrackCoordResult $addTrackCoordResult");
+
+      if (_newTrack) {
+        var addTrackCoordResult = await DBProvider.db.addTrackCoord(trackCoord, widget.track.track);
+        debugPrint("addTrackCoordResult $addTrackCoordResult");
+      }
+
       _formSaved = true;
     }
   }
@@ -281,12 +304,13 @@ class _NewTrackState extends State<NewTrack> {
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.lightGreen,
       appBar: AppBar(
         title: _newTrack ? Text("New Track") : Text("Update Track"),
       ),
       body: ListView(
         children: <Widget>[
-           _gpxFileInfo,
+          (_gpxFilePath != null) ? _gpxFileInfo : Container(),
           _form,
         ],
       ),
@@ -301,7 +325,7 @@ class _NewTrackState extends State<NewTrack> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.only(left: 16.0, right: 8.0, top: 26.0, bottom: 8.0),
             child: TextFormField(
               style: _formTextStyle,
               controller: _formNameController,
@@ -312,7 +336,14 @@ class _NewTrackState extends State<NewTrack> {
                 _fieldFocusChange(context, _nameFocus, _descriptionFocus);
               },
               cursorColor: Colors.white,
-              decoration: _formInputDecoration,
+              decoration: InputDecoration(
+                labelText: "Name",
+                labelStyle: inputDecorationLabelStyle,
+
+//                focusedBorder: OutlineInputBorder(
+//                    borderSide: const BorderSide(color: Colors.white, width: 2.0)),
+                  enabledBorder: UnderlineInputBorder(borderSide: const BorderSide(color: Colors.blueGrey))
+              ),
               validator: (value) {
                 if (value.isEmpty) {
                   return "Please enter a name!";
@@ -320,10 +351,11 @@ class _NewTrackState extends State<NewTrack> {
                 return null;
               },
               maxLines: 1,
+
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.only(left: 16.0, right: 8.0, top: 6.0, bottom: 8.0),
             child: TextFormField(
               style: _formTextStyle,
               controller: _formDescriptionController,
@@ -333,10 +365,14 @@ class _NewTrackState extends State<NewTrack> {
               onFieldSubmitted: (term) {
                 _fieldFocusChange(context, _descriptionFocus, _locationFocus);
               },
+
               decoration: InputDecoration(
                 labelText: "Description",
                 labelStyle: inputDecorationLabelStyle,
+
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueGrey)),
               ),
+
               validator: (value) {
                 if (value.isEmpty) {
                   return "Please enter a description";
@@ -347,24 +383,44 @@ class _NewTrackState extends State<NewTrack> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+
               children: <Widget>[
+//                Padding(
+//                  padding: const EdgeInsets.only(right: 48.0),
+//                  child: Text("Type"),
+//                ),
+
+
                 FlatButton.icon(
                   onPressed: () => setTrackType('walk'),
                   icon: Icon(Icons.directions_walk,
+                  size: 36.0,
                   color: !(_trackType == "walk") ? Colors.white30 : Colors.white),
                   label: Text(""),
                 ),
                 FlatButton.icon(
                   onPressed: () => setTrackType('bike'),
                   icon: Icon(Icons.directions_bike,
+                  size: 36.0,
                   color: !(_trackType == "bike") ? Colors.white30 : Colors.white),
                   label: Text("")
                 ),
+//                FlatButton.icon(
+//                  onPressed: () => {},
+//                  icon: Icon(Icons.directions_walk),
+//                  label: Text(""),
+//                ),
               ],
               ),
+            ),
+            Divider(
+              thickness: 1.0,
+              indent: 12.0,
+              endIndent: 8.0,
+              color: Colors.blueGrey,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -383,6 +439,7 @@ class _NewTrackState extends State<NewTrack> {
                       decoration: InputDecoration(
                         labelText: 'Location Name',
                         labelStyle: inputDecorationLabelStyle,
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueGrey)),
                       ),
                       validator: (value) {
                         if (value.isEmpty) {
@@ -437,8 +494,9 @@ class _NewTrackState extends State<NewTrack> {
                     controller: _formStartLatitudeController,
                     style: _formTextStyle,
                     decoration: InputDecoration(
-                        labelText: 'Latitude',
-                        labelStyle: inputDecorationLabelStyle
+                      labelText: 'Latitude',
+                      labelStyle: inputDecorationLabelStyle,
+                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueGrey)),
                     ),
                     keyboardType: TextInputType.number,
                   )),
@@ -449,6 +507,7 @@ class _NewTrackState extends State<NewTrack> {
                       decoration: InputDecoration(
                         labelText: 'Longitude',
                         labelStyle: inputDecorationLabelStyle,
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blueGrey)),
                       ),
                       keyboardType: TextInputType.number,
                     ),
@@ -456,6 +515,7 @@ class _NewTrackState extends State<NewTrack> {
                   FlatButton.icon(
                     onPressed: getStartPosition,
                     icon: Icon(Icons.add,
+                    size: 32.0,
                     color: Colors.white,),
                     label: Text(' '),
                   ),

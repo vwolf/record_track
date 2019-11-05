@@ -32,7 +32,7 @@ class TrackingPageState extends State<TrackingPage> {
   StreamController<TrackPageStreamMsg> _streamController = StreamController.broadcast();
 
   /// TrackService with empty track, then save track with default values
-  TrackingService trackingService = TrackingService(Track());
+  TrackingService trackingService = TrackingService();
 
   MapTracking get _mapTracking => MapTracking(_streamController, trackingService );
 
