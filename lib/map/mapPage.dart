@@ -278,7 +278,7 @@ class MapPageState extends State<MapPage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text("${widget.trackService.gpxFileData.trackName}"),
+          title: Text("${widget.trackService.track.name}"),
         ),
         body: Column(children: <Widget>[
           _mapTrack,

@@ -87,7 +87,7 @@ class ScaleLayer extends StatelessWidget {
     var targetPoint = util.calculateEndingsGlobalCoordinates(center, 90, distance);
     var end = map.project(targetPoint);
     var displayDistance = distance > 999 
-      ? '${(distance / 100).toStringAsFixed(0)} km'
+      ? '${(distance / 1000).toStringAsFixed(0)} km'
       : '${distance.toStringAsFixed(0)} m';
     double width = (end.x - start.x);
 
@@ -135,7 +135,7 @@ class ScalePainter extends CustomPainter {
     ..strokeCap = StrokeCap.square
     ..strokeWidth = lineWidth;
 
-    var sizeForStartEnd = 6;
+    var sizeForStartEnd = 4;
     var paddingLeft = padding == null ? 0 : padding.left + sizeForStartEnd / 2;
     var paddingTop = padding == null ? 0 : padding.top;
 

@@ -55,6 +55,17 @@ class MapTrackingState extends State<MapTracking> {
   bool _location = false;
   bool _edit = false;
 
+  // Map statusbar icons settings
+  Map<String, bool> mapStatusbarState = {
+    'offline' : false,
+    'location' : false,
+    'edit' : false,
+    'add' : false,
+    'info' : true,
+    'zoomIn' : true,
+    'zoomOut' : true,
+  };
+
   TrackingStatusbarEvent statusbarCall;
 
   /// callback function
@@ -155,8 +166,9 @@ class MapTrackingState extends State<MapTracking> {
             eventCallback: statusbarCallback,
             offlineMode: _offline,
             location: _location,
-            edit: _edit,
+            //edit: _edit,
             type: "tracking",
+            state: mapStatusbarState,
           ),
         ],)
     );
@@ -224,6 +236,9 @@ class MapTrackingState extends State<MapTracking> {
 //          }
 //
 //        });
+        break;
+
+      case StatusBarEvent.Add :
         break;
     }
   }

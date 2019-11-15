@@ -22,3 +22,5 @@ Track edit
 - Add track point updates 
 
 - Delete track point: TrackService.deletePointInTrack()
+
+- Move track point: select point then move map, changes are saved when deselect point

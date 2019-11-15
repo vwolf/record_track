@@ -37,9 +37,11 @@ class RequestPermissions {
             .requestPermissions([permission]);
         switch (permission) {
           case (PermissionGroup.storage) :
+
             return permissionRequestResult[PermissionGroup.storage] ==
                 PermissionStatus.granted;
             break;
+
 
           case (PermissionGroup.location) :
             return permissionRequestResult[PermissionGroup.location] ==
@@ -55,4 +57,28 @@ class RequestPermissions {
   }
 
 
+  Future requestAudioPermission(PermissionGroup permission) async {
+    var permissionStatus = await PermissionHandler().checkPermissionStatus(permission);
+    bool requestPermission = false;
+    if (permissionStatus == PermissionStatus.denied) {
+
+      if (Platform.isAndroid) {
+        final Map<PermissionGroup, PermissionStatus> permissionRequestResult = await PermissionHandler()
+          .requestPermissions([permission]);
+        switch (permission) {
+          case (PermissionGroup.microphone) :
+            return permissionRequestResult[PermissionGroup.microphone] = PermissionStatus.granted;
+            break;
+        }
+      }
+
+    } else {
+      return true;
+    }
+
+
+
+
+    return requestPermission;
+  }
 }

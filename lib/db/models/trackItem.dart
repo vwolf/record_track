@@ -20,7 +20,9 @@ class TrackItem {
   String type;
   DateTime timestamp;
   String latlng;
-  List <String>images;
+  List images;
+  List recordings;
+  List videos;
   String createdAt;
   int markerId;
 
@@ -32,6 +34,8 @@ class TrackItem {
     this.timestamp,
     this.latlng,
     this.images,
+    this.recordings,
+    this.videos,
     this.createdAt,
     this.markerId,
   });
@@ -44,6 +48,8 @@ class TrackItem {
     timestamp: DateTime.parse(json['timestamp']),
     latlng: json['latlng'],
     images: jsonDecode(json['images']),
+    recordings: jsonDecode(json['recordings']),
+    videos: jsonDecode(json['videos']),
     createdAt: json['createdAt'],
     markerId: json['markerId'],
   );
@@ -56,6 +62,8 @@ class TrackItem {
     "timestamp": timestamp.toIso8601String(),
     "latlng": latlng,
     "images": jsonEncode(images),
+    "recordings": jsonEncode(recordings),
+    "videos": jsonEncode(videos),
     "createdAt": createdAt,
     "markerId" : markerId,
   };

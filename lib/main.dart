@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_map/plugin_api.dart';
 import 'package:intl/intl.dart';
 import 'l10n/messages_all.dart';
 
@@ -200,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// Use [Path_Provider] to get path to external storage directory.
   /// Default directory is Tracks. This can be changed using settings.
-  /// Here we only search in internal storage
+  /// First search default external storage then custom folder on SDCard.
   ///
   void loadTracks() async {
 
@@ -214,7 +215,10 @@ class _MyHomePageState extends State<MyHomePage> {
               Directory(_gpxFileDirectoryString).create(recursive: true);
             }
             getTracksFromDb();
-            findTracks(_gpxFileDirectoryString);
+            for (String p in Settings.settings.externalPaths) {
+              findTracks(p);
+            }
+            //findTracks(_gpxFileDirectoryString);
         }
       }).then((_) {
         // tracks on sd card?
@@ -225,13 +229,14 @@ class _MyHomePageState extends State<MyHomePage> {
           // build default path
           String trackDirectory = "${Settings.settings.externalSDCard}/${Settings.settings.defaultTrackDirectory}";
           print("SDCard default path: $trackDirectory");
+          Settings.settings.pathTracksExternal = trackDirectory;
           searchSDCard().then((r) {
             if (r == true) {
               print("SEARCH SDCARD!!");
               findTracks(trackDirectory);
-              if (Settings.settings.pathTracksExternal != null) {
-                findTracks(Settings.settings.pathTracksExternal);
-              }
+//              if (Settings.settings.pathTracksExternal != null) {
+//                findTracks(Settings.settings.pathTracksExternal);
+//              }
             } else {
               // r == null: click outside of dialog, r == false: cancel button in dialog
               print("Search SD card canceled");
@@ -243,9 +248,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  /// Set path to internal Storage and to external SDCard.
+  /// Set path to external Storage (emulated and SDCard?).
+  /// Paths:
+  /// - storage/emulated/0
+  /// - storage/C4AB.1401/Android/data/com.../files (is the sd card name?)
+  /// - storage/C4AB-1401/ root of external storage (/Tracks)
   /// Add to [Settings]
-  /// Uses  path_provider_ex,
+  /// Uses [path_provider_ex] to get root of SD card path
   ///
   /// ToDo: Path from [getExternalStorageDirectory] does not work? Path hard coded!
   Future<bool> setStoragePath() async {
@@ -253,11 +262,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // storage Android
     if (Platform.isAndroid) {
-      // storage internal
-      //var dir = await getExternalStorageDirectory();
-      //var dir = await getApplicationDocumentsDirectory();
-      //Settings.settings.pathTracksInternal = "${dir.path}/${Settings.settings.defaultTrackDirectory}";
-      Settings.settings.pathTracksInternal = "/data/data/com.devwolf.record_track/files/Tracks";
+      // storage external default
+      List<Directory> dirs = await getExternalStorageDirectories();
+
+//      var dir = await getExternalStorageDirectory();
+//      var cacheDirs = await getExternalCacheDirectories();
+//      var appdir = await getApplicationDocumentsDirectory();
+//      var supportDir = await getApplicationSupportDirectory();
+//       /sdcard/Tracks/no-sf-s12-01kloten-gillersklack.gpx
+//       /storage/C4AB-1401/Android/data/com.devwolf.record_track/files/test.gpx
+
+      //Settings.settings.pathTracksInternal = "/storage/C4AB-1401/Android/data/com.devwolf.record_track/files";
+      Settings.settings.pathTracksInternal = "${dirs[0].path}";
+      for (Directory d in dirs) {
+        //Settings.settings.set({"externalPath": d.path});
+        Settings.settings.externalPaths.add(d.path);
+      }
+      print("Settings externalPath.length: ${Settings.settings.externalPaths.length}");
+
+
       // storage sd card (external)
       try {
         storageInfo = await PathProviderEx.getStorageInfo();
@@ -290,20 +313,22 @@ class _MyHomePageState extends State<MyHomePage> {
     
   }
 
-  ///data/data/com.devwolf.record_track/files/Tracks/gransee.gpx
   /// Add all gpx files in [directoryPath] to [trackPath].
   /// Then call [loadTrackMetaData] to read gpx files.
   ///
-  /// [directoryPath]
-  void findTracks(String directoryPath) {
+  /// - @param [directoryPath]
+  /// - @param bool [customDir] true: search directories in [directoryPath]
+  void findTracks(String directoryPath, {customDirs: true}) {
     print("findTracks for path: $directoryPath");
     List<String> trackPath = [];
-    Directory(directoryPath).list(recursive: true, followLinks: false)
+    Directory(directoryPath).list(recursive: customDirs, followLinks: false)
         .listen((FileSystemEntity entity) {
           print("path: ${entity.path}");
           if (path.extension(entity.path) == ".gpx") {
             if (trackPath.contains(entity.path) == false) {
-              trackPath.add(entity.path);
+              if (_tracks.indexWhere((t) => t.gpxFilePath == entity.path) == -1 ) {
+                trackPath.add(entity.path);
+              }
             }
           }
         })

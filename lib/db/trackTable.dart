@@ -24,8 +24,8 @@ class TrackTable {
             "tourImage TEXT,"
             "options TEXT,"
             "coords TEXT,"
-            "track TEXT,"
-            "items TEXT,"
+            "track INTEGER,"
+            "items INTEGER,"
             "createdAt TEXT )");
       });
       debugPrint("Collection Track create ok: $result");
@@ -44,9 +44,18 @@ class TrackTable {
     var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM TRACK");
     int id = table.first['id'];
     // join all parts of trackname with '_'
-    var trackNameFinal = newTrack.name.replaceAll(new RegExp(r' '), '_');
+    var trackNameFinal = newTrack.name.replaceAll(new RegExp(r'[ -]'), '_');
     // create trackCoordsTable for track
     var trackCoordsTableName = await createTrackCoordsTable(db, trackNameFinal);
+//    if (trackCoordsTableName != false) {
+//      var res = await db.query(trackCoordsTableName, columns: ["id"]);
+//      if (res.length > 0 ) {
+//        if (res.contains("id")) {
+//          newTrack.track = res[0] as int;
+//        }
+//      }
+//    }
+
     print("CreateTrackCoordsTable $trackCoordsTableName");
     newTrack.track = trackCoordsTableName;
 
@@ -68,28 +77,32 @@ class TrackTable {
   /// new track, coords and item table
   /// Clone tables then delete
   /// ToDo Check if tables exists
-  Future cloneTrack(Database db, Track newTrack, String oldTrackName) async {
+  Future cloneTrack(Database db, Track newTrack) async {
     print("db CloneTrack");
     /// first create new table and save
-    // int id = newTrack.id;
     // join all parts of tourname with '_'
-    var modTourName = newTrack.name.replaceAll(RegExp(r' '), '_');
-    String oldTrackNameMod = oldTrackName.replaceAll(RegExp(r' '), '_');
+    String newTrackName = newTrack.name.replaceAll(RegExp(r' '), '_');
+    String oldTrackName = newTrack.track.replaceAll(RegExp(r' '), '_');
+    // save for later
+    int oldTrackId = newTrack.id;
+
     // create track table for track
-    var cloneTableResult = await cloneTrackCoordsTable(db, oldTrackNameMod, modTourName);
+    var cloneTableResult = await cloneTrackCoordsTable(db, newTrack.track, newTrackName);
     newTrack.track = cloneTableResult;
-    TrackCoordTable().deleteTrackCoordTable(db, oldTrackNameMod);
+    TrackCoordTable().deleteTrackCoordTable(db, oldTrackName);
 
     // clone item table and delete old table
-    var cloneItemTableResult = await cloneTrackItemTable(db, oldTrackNameMod, modTourName);
+    String oldTrackItemsTableName = newTrack.items.replaceAll(RegExp(r' '), '_');
+    var cloneItemTableResult = await cloneTrackItemTable(db, newTrack.items, newTrackName);
     newTrack.items = cloneItemTableResult;
-    TrackItemTable().deleteTrackItemTable(db, oldTrackNameMod);
+    TrackItemTable().deleteTrackItemTable(db, oldTrackItemsTableName);
 
     // delete track and add new track
-    deleteTrack(db, newTrack.id);
+    deleteTrack(db, oldTrackId);
     var res = await db.insert("TRACK", newTrack.toMap());
     return res;
   }
+
 
   /// Table for track coords
   createTrackCoordsTable(Database db, String trackName) async {
@@ -110,6 +123,7 @@ class TrackTable {
   cloneTrackItemTable(Database db, String tableToClone, String tableName ) async {
     return await TrackItemTable().cloneTrackItemTable(db, tableToClone, tableName);
   }
+
 
   updateTrack(Database db, Track track) async {
     print("updateTrack");

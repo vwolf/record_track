@@ -6,6 +6,7 @@ import 'models/trackCoord.dart';
 class TrackCoordTable {
   TrackCoordTable();
 
+  /// First get
   createTrackCoordTable(Database db, String trackName) async {
      String trackCoordTableName = "TourTrack_" + trackName;
     try {
@@ -31,9 +32,36 @@ class TrackCoordTable {
     }
   }
 
+//  createTrackCoordTable(Database db, String trackName) async {
+//    String trackCoordTableName = "TourTrack_" + trackName;
+//    try {
+//      db.transaction((txn) async {
+//        await txn.execute("CREATE TABLE " +
+//            trackCoordTableName +
+//            " (id INTEGER PRIMARY KEY,"
+//                "latitude REAL,"
+//                "longitude REAL,"
+//                "altitude REAL,"
+//                "timestamp TEXT,"
+//                "accuracy REAL,"
+//                "heading REAL,"
+//                "speed REAL,"
+//                "speedAccuracy REAL,"
+//                "item INTEGER"
+//                ")");
+//      });
+//      return trackCoordTableName;
+//    } on DatabaseException catch (e) {
+//      debugPrint("DatabaseException $e");
+//      return false;
+//    }
+//  }
+
+
+  /// Use id to identify table to clone
   cloneTrackCoordTable(Database db, String tableToClone, String newTableName) async {
-    String tableToCloneName = "Track_" + tableToClone;
-    String newTrackCoordTableName = "Track_" + newTableName;
+    String tableToCloneName = tableToClone;
+    String newTrackCoordTableName = "TourTrack_" + newTableName;
     try {
       db.transaction((txn) async {
         await txn.execute("CREATE TABLE " + newTrackCoordTableName + " AS SELECT * FROM " + tableToCloneName);
@@ -46,7 +74,7 @@ class TrackCoordTable {
   }
 
   deleteTrackCoordTable(Database db, String tableName) async {
-    String tableToDelete = "TourTrack_" + tableName;
+    String tableToDelete = tableName;
     try {
       var res = db.transaction((txn) async {
         await txn.execute(("DROP TABLE " + tableToDelete));
@@ -107,7 +135,7 @@ class TrackCoordTable {
     try {
       var res = await db.query(trackCoordTable);
       List<TrackCoord> list = res.isNotEmpty ? res.map((c) => TrackCoord.fromMap(c)).toList() : [];
-      print(list);
+      //print(list);
       return list;
     } on DatabaseException catch (e) {
       print("sqlite error: $e");
@@ -147,8 +175,9 @@ class TrackCoordTable {
   }
 
   /// Replace [TrackCoord] with id in db
-  /// 
+  /// Get table with tableId
   Future<int> replaceTrackCoord(Database db, String tableName, TrackCoord trackCoord) async {
+
     try {
       await db.update("$tableName", trackCoord.toMap(), where: "id = ?", whereArgs: [trackCoord.id]);
       return 1;

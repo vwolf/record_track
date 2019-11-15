@@ -20,7 +20,9 @@ class Track {
   String location;
   String tourImage;
   String options;
+  /// Start coordinates of track as lat/lng
   String coords; // start coords
+  /// Table name with track coords
   String track;
   String items;
   String createdAt;

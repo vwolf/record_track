@@ -167,8 +167,12 @@ class _NewTrackState extends State<NewTrack> {
   ///  Write changes to gpx file?
   ///  Write track to db, write changes and mark track entry
   Future submitEvent(int i) async {
+    bool clon = false;
     if ( !_newTrack ) {
-
+      // if track name changed then create new track with clone and new name
+      if (_formNameController.text != widget._track.name) {
+        clon = true;
+      }
     }
 
     // save new track
@@ -219,15 +223,21 @@ class _NewTrackState extends State<NewTrack> {
         var dbResult = await DBProvider.db.newTrack(widget.track);
         print(dbResult);
         widget.tracks.add(widget.track);
+        Navigator.pop(context, widget.track);
       } else {
         // update values in new track object
         widget.track.id = widget._track.id;
         widget.track.track = widget._track.track;
+        widget.track.items = widget._track.items;
 
         // options - type can be changed but that is already set
         //
+        if (clon) {
+          await DBProvider.db.cloneTrack(widget.track);
+        } else {
+          await DBProvider.db.updateTrack(widget.track);
+        }
 
-        await DBProvider.db.updateTrack(widget.track);
         // map track to _track?
 
         Navigator.pop(context, widget.track);
@@ -673,7 +683,7 @@ class _SubmitBtnWithState extends State<SubmitBtnWithState> {
         widget.callback(1);
         Scaffold.of(context).showSnackBar(SnackBar(
           content: Text(widget.btnText),
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: 1),
         ));
       },
     );

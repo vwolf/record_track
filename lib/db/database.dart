@@ -2,14 +2,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:record_track/db/models/trackCoord.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'models/track.dart';
+import 'models/trackCoord.dart';
+import 'models/trackItem.dart';
+
 import 'trackTable.dart';
 import 'trackCoord.dart';
+import 'trackItem.dart';
 
 /// Database sqlite
 /// 
@@ -18,6 +21,7 @@ class DBProvider {
 
   TrackTable _trackTable;
   TrackCoordTable _trackCoordTable;
+  TrackItemTable _trackItemTable;
 
   DBProvider._();
   static final DBProvider db = DBProvider._();
@@ -30,6 +34,7 @@ class DBProvider {
 
     _trackTable = TrackTable();
     _trackCoordTable = TrackCoordTable();
+    _trackItemTable = TrackItemTable();
 
     _database = await _initDB(databaseName);
     return _database;
@@ -88,9 +93,9 @@ class DBProvider {
     return _trackTable.trackExists(db, tourname);
   }
 
-  cloneTrack(Track newTrack, String oldTrackName) async {
+  cloneTrack(Track track) async {
     final db = await database;
-    return _trackTable.cloneTrack(db, newTrack, oldTrackName);
+    return _trackTable.cloneTrack(db, track);
   }
 
   /// TrackCoord Table queries
@@ -99,6 +104,7 @@ class DBProvider {
     return _trackCoordTable.addTrackCoord(db, trackCoord, trackCoordTable);
   }
 
+  /// Return list with [TrackCoord]
   Future<List<TrackCoord>> getTrackCoords(String trackCoordTable) async {
     final db = await database;
     return _trackCoordTable.getTrackCoords(db, trackCoordTable);
@@ -122,5 +128,36 @@ class DBProvider {
   deleteTrackCoord(int id, String trackCoordTable) async {
     final db = await database;
     return _trackCoordTable.deleteTrackCoord(db, trackCoordTable, id);
+  }
+
+  /// TrackItem table queries
+  Future<int> addTrackItem(TrackItem trackItem, String trackItemTable) async {
+    final db = await database;
+    return _trackItemTable.addTrackItem(db, trackItem, trackItemTable);
+  }
+
+  deleteTrackItem(TrackItem trackItem,  String trackItemTable) async {
+    final db = await database;
+    return _trackItemTable.deleteTrackItem(db, trackItem, trackItemTable);
+  }
+
+  Future<int> updateTrackItem(int id, String trackItemTable, String prop, dynamic val) async {
+    final db = await database;
+    return 0;
+  }
+
+  Future<int> replaceTrackItem(String trackItemTable, TrackItem trackItem) async {
+    final db = await database;
+    return _trackItemTable.replaceTrackItem(db, trackItem, trackItemTable);
+  }
+
+
+  Future<List<TrackItem>> getTrackItems(String trackItemTable) async {
+    final db = await database;
+    return _trackItemTable.getTrackItems(db, trackItemTable);
+  }
+
+  Future<TrackItem> getTrackItem(String trackItemTable, String prop, dynamic value) async  {
+    final db = await database;
   }
 }

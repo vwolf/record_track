@@ -9,6 +9,7 @@ import 'package:vector_math/vector_math.dart';
 import 'package:latlong/latlong.dart';
 import 'package:record_track/db/database.dart';
 import 'package:record_track/db/models/trackCoord.dart';
+import 'package:record_track/db/models/trackItem.dart';
 import 'package:record_track/gpx/gpxParser.dart';
 import 'package:record_track/readWrite/readFile.dart';
 import 'package:record_track/services/geolocationService.dart';
@@ -34,13 +35,16 @@ class TrackService {
   List<LatLng> trackLatLngs = [];
 
   /// Map State variables
-  List<int> selectedTrackPoints;
+  List<int> selectedTrackPoints = [];
 
   List<TrackRollbackObj> trackRollbackObjs = [];
 
   /// Track info
   double trackDistance = 0.0;
 
+  /// [TrackItem]'s
+  List<TrackItem> trackItems = [];
+  
   /// Fill or update [Track] object to be used by [MapTrack].
   /// 
   Future<void> getTrack() async {
@@ -72,6 +76,15 @@ class TrackService {
           trackDistance = r;
         });
         trackSource = TrackSource.DB;
+        //return true;
+      });
+      // load track items?
+      await DBProvider.db.getTrackItems(track.items).then((result) {
+        if (result.length > 0) {
+          trackItems = result;
+        }
+      }).whenComplete(() {
+        print("Load track items complete");
         return true;
       });
     }
@@ -133,7 +146,8 @@ class TrackService {
   }
 
   /// Set or change the track start position
-  /// 
+  ///
+  /// ToDo: update trackDistance
   setTrackStart(LatLng startPos) async {
     if (trackLatLngs.length > 0) {
       trackLatLngs.replaceRange(0, 1, [startPos]);
@@ -162,6 +176,9 @@ class TrackService {
         if ( redo != true ) {
           trackRollbackObjs.add( TrackRollbackObj(TrackAction.AddPoint, [trackCoords.length.toDouble()] ));
         }
+        GeoLocationService.gls.getDistanceBetweenCoords(trackLatLngs[trackLatLngs.length - 2], trackLatLngs.last).then((dist) {
+          addToTrackDistance(dist);
+        });
 
         res = r;
       }
@@ -202,10 +219,11 @@ class TrackService {
   /// Update track distance 
   /// 
   /// - First trackpoint: update start point
+  /// ToDo: Delete point if track has only 2 points
   deletePointInTrack( TrackEvent trackEvent) async {
     if (selectedTrackPoints.length == 2) {
       int trackPointIndex = selectedTrackPoints[1];
-    
+
       if ( trackPointIndex < trackLatLngs.length ) {
         int trackCoordId = trackCoords[trackPointIndex].id;
 
@@ -225,6 +243,12 @@ class TrackService {
             selectedTrackPoints[0] = lastTrackPoint - 2;
             selectedTrackPoints[1] = lastTrackPoint - 1;
           }
+          // only on point in track left
+          if (trackLatLngs.length == 1) {
+            selectedTrackPoints.removeLast();
+            selectedTrackPoints[0] = 1;
+          }
+
           getTrackDistance().then((r) {
             trackDistance = r;
           });
@@ -252,6 +276,41 @@ class TrackService {
         }
       }
     }
+  }
+
+  /// [TrackItem] 
+  /// Add new [TrackItem] to db
+  Future<int> addItemToTrack( TrackItem trackItem) async {
+    
+    DBProvider.db.addTrackItem(trackItem, track.items).then((result) {
+      if(result > 0 ) {
+        trackItems.add(trackItem);
+      }
+      return result;
+    });
+
+    return 0;
+  }
+
+  /// Update [TrackItem]
+  Future<int> updateTrackItem( TrackItem trackItem) async {
+    DBProvider.db.replaceTrackItem(track.items , trackItem).then((result) {
+      print(result);
+      return result;
+    });
+    return 0;
+  }
+
+  /// Delete [TrackItem]
+  ///
+  Future<int> deleteTrackItem( TrackItem trackItem) async {
+    DBProvider.db.deleteTrackItem(trackItem, track.items).then((result) {
+      print("TrackItem ${trackItem.name} deleteted.");
+
+      trackItems.remove(trackItem);
+      return result;
+    });
+    return 0;
   }
 
 
@@ -303,6 +362,13 @@ class TrackService {
     return TrackCoord(latitude: latLng.latitude, longitude: latLng.longitude);
   }  
 
+  /// Convert [String] to [LatLng]
+  ///
+  LatLng latLngJsonToLatLng(String latLng) {
+    return GeoLocationService.gls.stringToLatLng(latLng);
+  }
+
+
   /// Change track point position at [trackPointIndex]
   /// Make new [TrackCoord] and replace in db.
   /// If db write successful. update 
@@ -324,6 +390,15 @@ class TrackService {
     });
     return res;
   }
+
+  ///
+  /// - @param [trackPointIndex] index in [trackLatLngs]
+  /// - @param [latlng] Offset to move track point
+  moveTrackPoint(int trackPointIndex, Point latLng) {
+      trackLatLngs[trackPointIndex].longitude += latLng.y;
+      trackLatLngs[trackPointIndex].latitude += latLng.x;
+  }
+
 
   saveTrack() {
     DBProvider.db.updateTrack(track);
@@ -394,6 +469,11 @@ class TrackService {
     int distanceMeter = totalDistanceGeo.toInt();
     double distanceKm = (distanceMeter / 1000);
     return distanceKm;
+  }
+
+  addToTrackDistance(double distance) {
+    int distanceMeter = distance.toInt();
+    trackDistance = trackDistance + distance / 1000;
   }
 }
 

@@ -68,7 +68,7 @@ class _TrackListItemState extends State<TrackListItem> {
   /// ToDo controller.jumpTo is used to reset item - there should be a feddback
   @override void didUpdateWidget(TrackListItem oldWidget) {
     print('trackListItem didUpdateWidget & childSize: $childSize');
-    controller.animateTo(0.0, duration: new Duration(milliseconds: 1), curve: Curves.decelerate);
+    controller.hasClients ?? controller.animateTo(0.0, duration: new Duration(milliseconds: 1), curve: Curves.decelerate);
     //controller.jumpTo(2.0);
     super.didUpdateWidget(oldWidget);
   }

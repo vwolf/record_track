@@ -7,6 +7,7 @@ import 'trackService.dart';
 import 'trackListItem.dart';
 import '../map/mapPage.dart';
 import 'newTrack.dart';
+import 'package:record_track/gpx/gpxCreator.dart';
 
 /// Display all saved tracks in ListView
 /// 
@@ -143,12 +144,13 @@ class _TrackListState extends State<TrackList> {
 
 
   /// Go to Save tour to external page
-  archiveTour(BuildContext context, Track track) {
-    // Navigator.of(context).push(
-    //     new MaterialPageRoute(builder: (context) {
-    //       return new WriteTrackPage(track);
-    //     })
-    // );
+  archiveTour(BuildContext context, Track track) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => GpxCreator(track))
+    );
+    print("archiveTour: $result");
+
   }
 
 
@@ -250,7 +252,6 @@ class _TrackListState extends State<TrackList> {
                           archiveTour(context, snapshot.data[index]);
                         }
                       },
-                      //backgroundColor: snapshot.data[index].gpxFilePath == null ? Colors.orange : Colors.grey[700],
                     ),
                     ActionItems(
                       icon: IconButton(

@@ -6,16 +6,18 @@ class StatusbarLayerPluginOption extends LayerOptions {
   
   StatusbarEvent eventCallback;
   String type = "followTrack";
+  Map<String, bool> state;
   bool offlineMode;
   bool location;
-  bool edit;
+  //bool edit;
 
   StatusbarLayerPluginOption({
     this.eventCallback, 
     this.offlineMode, 
     this.location, 
-    this.edit,
-    this.type });
+    //this.edit,
+    this.type,
+    this.state});
 }
 
 
@@ -83,42 +85,52 @@ class StatusbarLayer extends StatelessWidget {
               ),
               onPressed: () => statusBarEvent(StatusBarEvent.ZoomIn),
             ),
-            IconButton(
-              icon: Icon(Icons.zoom_out,
-              color: Colors.orange,
-              size: 36.0,
+              IconButton(
+                icon: Icon(Icons.zoom_out,
+                  color: Colors.orange,
+                  size: 36.0,
+                ),
+                onPressed: () => statusBarEvent(StatusBarEvent.ZoomOut),
               ),
-              onPressed: () => statusBarEvent(StatusBarEvent.ZoomOut),
-            ),
-            IconButton(
-              icon: Icon(statusbarLayerOpts.location ? Icons.location_on : Icons.location_off,
-              color: Colors.orange,
-              size: 36.0,
+              IconButton(
+                icon: Icon(
+                  statusbarLayerOpts.location ? Icons.location_on : Icons
+                      .location_off,
+                  color: Colors.orange,
+                  size: 36.0,
+                ),
+                onPressed: () => statusBarEvent(StatusBarEvent.Location),
               ),
-              onPressed: () => statusBarEvent(StatusBarEvent.Location),
-            ),
-            IconButton(
-              icon: Icon(Icons.offline_pin,
-              color: statusbarLayerOpts.offlineMode ? Colors.orange : Colors.black26,
-              size: 36.0,
+              IconButton(
+                icon: Icon(Icons.offline_pin,
+                  color: statusbarLayerOpts.offlineMode ? Colors.orange : Colors
+                      .black26,
+                  size: 36.0,
+                ),
+                onPressed: () => statusBarEvent(StatusBarEvent.OfflineMode),
               ),
-              onPressed: () => statusBarEvent(StatusBarEvent.OfflineMode),
-            ),
-            IconButton(
-              icon: Icon(Icons.info,
-              color: Colors.orange,
-              size: 36.0,
+              IconButton(
+                icon: Icon(Icons.info,
+                  color: Colors.orange,
+                  size: 36.0,
+                ),
+                onPressed: () => statusBarEvent(StatusBarEvent.Info),
               ),
-              onPressed: () => statusBarEvent(StatusBarEvent.Info),
-            ),
-            IconButton(
-              icon:Icon(Icons.edit,
-              color: statusbarLayerOpts.edit ? Colors.orange : Colors.black26,
-              size: 36.0,
-            ),
-            onPressed: () => statusBarEvent(StatusBarEvent.Edit),
-            
-            ),
+              IconButton(
+                icon: Icon(Icons.edit,
+                  color: statusbarLayerOpts.state['edit'] ? Colors.orange : Colors
+                      .black26,
+                  size: 36.0,
+                ),
+                onPressed: () => statusBarEvent(StatusBarEvent.Edit),
+              ),
+              IconButton(
+                icon:Icon(Icons.add,
+                  color: statusbarLayerOpts.state['add'] ? Colors.orange : Colors.black26,
+                  size: 36.0,
+                ),
+                onPressed: () => statusBarEvent(StatusBarEvent.Add),
+              ),
           ],
           )
         ],
@@ -193,6 +205,7 @@ enum StatusBarEvent {
   OfflineMode,
   Info,
   Edit,
+  Add,
 }
 
 // class StatusBar extends StatelessWidget {
