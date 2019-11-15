@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_map/plugin_api.dart';
 import 'package:intl/intl.dart';
 import 'l10n/messages_all.dart';
 
@@ -14,7 +13,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:path_provider_ex/path_provider_ex.dart';
-//import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'services/permissionService.dart';
 import 'db/models/track.dart';

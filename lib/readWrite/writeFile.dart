@@ -31,10 +31,10 @@ class WriteFileExternal {
     var permission = await RequestPermissions().requestPermission(PermissionGroup.storage);
     return permission;
 
-    await RequestPermissions().requestPermission(PermissionGroup.storage).then((result) {
-      print("requestPermission storage: $result");
-      return result;
-    });
+//    await RequestPermissions().requestPermission(PermissionGroup.storage).then((result) {
+//      print("requestPermission storage: $result");
+//      return result;
+//    });
   }
 
   Future newDirectory( String directoryName) {

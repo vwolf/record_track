@@ -112,7 +112,7 @@ class DisplayPictureScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     //RenderBox renderBox = context.findRenderObject();
     //Size size = renderBox.size;
-    FileImage _image = FileImage(File(imagePath));
+    //FileImage _image = FileImage(File(imagePath));
 
     return Scaffold(
       appBar: AppBar(

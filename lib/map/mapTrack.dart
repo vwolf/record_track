@@ -21,7 +21,7 @@ import 'package:record_track/services//directoryList.dart';
 import 'package:record_track/services/settings.dart';
 //import 'package:flutter_map/src/geo/crs/crs.dart';
 
-import 'package:record_track/waypoint/waypointModal.dart';
+//import 'package:record_track/waypoint/waypointModal.dart';
 import 'package:record_track/db/models/trackItem.dart';
 
 typedef StatusbarEvent = void Function(StatusBarEvent event);

@@ -53,7 +53,7 @@ class MapTrackingState extends State<MapTracking> {
   // status values
   bool _offline = false;
   bool _location = false;
-  bool _edit = false;
+  //bool _edit = false;
 
   // Map statusbar icons settings
   Map<String, bool> mapStatusbarState = {
@@ -113,9 +113,9 @@ class MapTrackingState extends State<MapTracking> {
           );
         };
         break;
+
         default: 
         print("Unkown trackingPageStreamMsg.type");
-        break;
     };
 
   }

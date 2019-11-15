@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart' as prefix0;
+//import 'package:flutter/material.dart' as prefix0;
 import 'package:geolocator/geolocator.dart';
 
 import 'package:latlong/latlong.dart';

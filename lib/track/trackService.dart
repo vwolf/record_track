@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:record_track/map/mapScale/scalebar_utils.dart';
-import 'package:sqflite/sqlite_api.dart';
+//import 'package:sqflite/sqlite_api.dart';
 import 'package:vector_math/vector_math.dart';
 //import 'package:geolocator/geolocator.dart';
 import 'package:latlong/latlong.dart';
@@ -95,12 +95,12 @@ class TrackService {
   Future saveEmptyTrack() async {
     LatLng currentPosition = await GeoLocationService.gls.simpleLocation();
 
-    var name_ext = DateTime.now().toString();
+    var namExt = DateTime.now().toString();
     // replace not allowed chars in table name
-    name_ext = name_ext.replaceAll(RegExp(r'[:\.\-]'), '_');
+    namExt = namExt.replaceAll(RegExp(r'[:\.\-]'), '_');
     print (track);
 
-    track.name = "track_$name_ext";
+    track.name = "track_$namExt";
     track.description = "tracking start";
     track.location = "later";
     track.timestamp = DateTime.now();
@@ -472,7 +472,7 @@ class TrackService {
   }
 
   addToTrackDistance(double distance) {
-    int distanceMeter = distance.toInt();
+    //int distanceMeter = distance.toInt();
     trackDistance = trackDistance + distance / 1000;
   }
 }

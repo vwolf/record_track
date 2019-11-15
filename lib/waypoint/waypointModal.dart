@@ -6,7 +6,6 @@ import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:audio_recorder/audio_recorder.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record_track/services/permissionService.dart';
@@ -43,7 +42,7 @@ class WayPointModalState extends State<WayPointModal> {
   OverlayEntry _imageOverlay;
 
   // Audio recording
-  Recording _recording = new Recording();
+  //Recording _recording = new Recording();
   bool _isRecording = false;
   String audioPath;
   List<String> recordings = [];
@@ -412,7 +411,7 @@ class WayPointModalState extends State<WayPointModal> {
 
         bool isRecording = await AudioRecorder.isRecording;
         setState(() {
-          _recording = Recording(duration: Duration(), path: "");
+          //_recording = Recording(duration: Duration(), path: "");
           _isRecording = isRecording;
         });
       }
@@ -428,13 +427,13 @@ class WayPointModalState extends State<WayPointModal> {
     bool isRecording = await AudioRecorder.isRecording;
 
     setState(() {
-      _recording = recording;
+      //_recording = recording;
       _isRecording = isRecording;
     });
   }
 
-  addImageFromPath(String path) async {
-    AssetImage assetImage = await AssetImage(path);
+  addImageFromPath(String path) {
+    AssetImage assetImage = AssetImage(path);
     images.add(assetImage);
   }
 
