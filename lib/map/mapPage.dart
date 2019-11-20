@@ -87,6 +87,10 @@ class MapPageState extends State<MapPage> {
         openPathEditOptionsSheet();
         return true;
       }
+      if (trackingPageStreamMsg.msg == "move") {
+        openPathEditOptionsSheet(type: "move");
+        return true;
+      }
       if (trackingPageStreamMsg.msg == "close") {
         openPathEditOptionsSheet(state: false);
         return true;
@@ -143,13 +147,17 @@ class MapPageState extends State<MapPage> {
   /// Show or remove [PersistentBottomSheet].
   /// 
   /// @param [bool] state used to force a state, no toogle
-  openPathEditOptionsSheet({bool state = true}) async {
+  openPathEditOptionsSheet({bool state = true, String type = "edit"}) async {
 
     if (_persistentBottomSheetController == null && state == true) {
       _persistentBottomSheetController = 
         _scaffoldKey.currentState.showBottomSheet((BuildContext context) {
           bottomSheetType = "options";
-          return _trackEditOptionSheet;
+          if (type == "move") {
+            return _trackMoveOptionSheet;
+          } else {
+            return _trackEditOptionSheet;
+          }
           
       });
     } else {
@@ -214,6 +222,32 @@ class MapPageState extends State<MapPage> {
       },);
   }
 
+  Widget get _trackMoveOptionSheet {
+    return StatefulBuilder(
+
+        builder: (BuildContext context, setState) {
+          return Container(
+            //color: c,
+              child: ButtonBar(
+                alignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.check),
+                    tooltip: "Move path point",
+                    onPressed: () {
+                      // toggle move track point
+                      //_mapTrack.trackService.deletePointInTrack(trackEventCall);
+
+                    },
+                  ),
+                  Text("Move Point"),
+                ]
+              )
+          );
+        }
+    );
+
+  }
 
   /// Bottomsheet content for track info.
   /// Track infos are: 

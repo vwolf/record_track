@@ -475,6 +475,23 @@ class TrackService {
     //int distanceMeter = distance.toInt();
     trackDistance = trackDistance + distance / 1000;
   }
+
+  /// Return distance from [track] start to [pointIndex].
+  ///
+  Future<double> getDistanceToPoint(int pointIndex) async {
+    double distanceTo = 0.0;
+    if (trackLatLngs.isNotEmpty) {
+      for (var i = 0; i < pointIndex; i++) {
+        distanceTo += await Geolocator().distanceBetween(
+            trackLatLngs[i].latitude,
+            trackLatLngs[i].longitude,
+            trackLatLngs[i + 1].latitude,
+            trackLatLngs[i + 1].longitude
+        );
+      }
+      return distanceTo;
+    }
+  }
 }
 
 

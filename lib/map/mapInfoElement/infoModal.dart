@@ -26,10 +26,12 @@ class InfoModal implements MapPlugin {
   final double borderStrokeWidth;
   final Color borderColor;
   final String infoText;
+  final bool visible;
 
   Offset offset = Offset.zero;
   CustomPoint tapPosition; 
   num realRadius = 0;
+
 
   InfoModal({
     this.point,
@@ -38,6 +40,7 @@ class InfoModal implements MapPlugin {
     this.borderStrokeWidth,
     this.borderColor,
     this.infoText,
+    this.visible,
   });
 
   @override 
@@ -77,9 +80,18 @@ class InfoModalLayer extends StatelessWidget {
     // );
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints bc) {
-        final size = Size(bc.maxWidth, bc.maxHeight);
-        //final size = Size(200.0, 50.0);
+        var size = Size(0.0, 0.0);
+        for (var mapInfoElement in layerOptions.infoElements) {
+          print("infoModal visible ${mapInfoElement.visible}");
+          if (mapInfoElement.visible ) {
+            size = Size(bc.maxWidth, bc.maxHeight);
+          }
+        }
+        //final size = Size(bc.maxWidth, bc.maxHeight);
+        //final size = Size(200.0, 350.0);
+
         return _build(context, size);
+        //return Container();
       },
     );
   }
@@ -90,19 +102,26 @@ class InfoModalLayer extends StatelessWidget {
       builder: (BuildContext context, _) {
         var mapInfoWidgets = <Widget>[];
         for (var mapInfoElement in layerOptions.infoElements) {
-          var pos = mapState.project(mapInfoElement.point);
-          pos = pos.multiplyBy(mapState.getZoomScale(mapState.zoom, mapState.zoom)) -
-            mapState.getPixelOrigin();
-          mapInfoElement.tapPosition = pos;
-          //mapInfoElement.offset = Offset(pos.x.toDouble(), pos.y.toDouble());
-          mapInfoElement.offset = getInfoElementOffset(pos, size, mapInfoElement.size);
+          if (mapInfoElement.visible) {
+            var pos = mapState.project(mapInfoElement.point);
+            pos = pos.multiplyBy(
+                mapState.getZoomScale(mapState.zoom, mapState.zoom)) -
+                mapState.getPixelOrigin();
+            mapInfoElement.tapPosition = pos;
+            //mapInfoElement.offset = Offset(pos.x.toDouble(), pos.y.toDouble());
+            mapInfoElement.offset =
+                getInfoElementOffset(pos, size, mapInfoElement.size);
 
-          mapInfoWidgets.add(
-            CustomPaint(
-              painter: InfoModalPainter(mapInfoElement),
-              size: size
-            ),
-          );
+            mapInfoWidgets.add(
+              CustomPaint(
+                  painter: InfoModalPainter(mapInfoElement),
+                  size: size
+              ),
+            );
+          } else {
+            print("InfoModal return Container");
+            return Container();
+          }
         }
 
         return Container(
